@@ -6,7 +6,7 @@
 | Dự án | BrewLite – Assignment 2 (Requirements to Deployment) |
 | Phiên bản | 1.0 |
 | Trạng thái | Draft – chờ review qua pull request |
-| Liên quan | `srs.md` (Task 1.2), `use-case-checkout.md` (Task 1.3), `../traceability-matrix.md` |
+| Liên quan | `srs.md` (Task 1.2), `usecase-checkout.md` (Task 1.3), `../traceability-matrix.md` |
 
 ---
 
@@ -197,7 +197,7 @@ PENDING → PAID → PREPARING → READY → COMPLETED
 | Nội dung | Tài liệu |
 |---|---|
 | Yêu cầu chức năng, phi chức năng, MoSCoW, tiêu chí chấp nhận | `docs/requirements/srs.md` (Task 1.2) |
-| Đặc tả use-case "Đặt và thanh toán đơn hàng" | `docs/requirements/use-case-checkout.md` (Task 1.3) |
+| Đặc tả use-case "Đặt và thanh toán đơn hàng" | `docs/requirements/usecase-checkout.md` (Task 1.3) |
 | Sơ đồ activity, sequence, class | `docs/diagrams/` (Task 2) |
 | Kiến trúc và ADR | `docs/architecture/` (Task 3) |
 | Truy vết | `docs/traceability-matrix.md` |
