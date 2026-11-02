@@ -1,0 +1,252 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------
+// ENUMS
+// ---------------------------------------------------------
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PREPARING
+  READY
+  COMPLETED
+  PAYMENT_FAILED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  WALLET
+  CARD
+}
+
+enum PaymentStatus {
+  SUCCESS
+  FAILED
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum DiscountType {
+  PERCENT
+  FIXED
+}
+
+enum NotificationType {
+  ORDER_NEW        // Có đơn mới
+  ORDER_UPDATE     // Đơn đã thanh toán / đổi trạng thái
+  PAYMENT_FAILED   // Thanh toán thất bại
+  ORDER_CANCELLED  // Đơn bị huỷ
+  LOW_STOCK        // Sắp hết hàng
+  OUT_OF_STOCK     // Hết hàng
+}
+
+enum NotificationAudience {
+  ADMIN
+  CUSTOMER
+}
+
+// ---------------------------------------------------------
+// MODELS
+// ---------------------------------------------------------
+
+model User {
+  id            Int            @id @default(autoincrement())
+  email         String         @unique
+  passwordHash  String
+  name          String?
+  phone         String?        @unique
+  gender        String?
+  loyaltyPoints Int            @default(0)
+  role          Role           @default(CUSTOMER)
+  isActive      Boolean        @default(true)
+
+  orders        Order[]
+  notifications Notification[]
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+  imageUrl    String?
+  isActive    Boolean   @default(true)
+
+  products    Product[]
+  toppings    Topping[] // Quan hệ nhiều - nhiều: Danh mục liên kết các loại Topping phù hợp
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id          Int           @id @default(autoincrement())
+  name        String
+  price       Int           // Số nguyên VNĐ
+  imageUrl    String?
+  description String?       @db.Text
+  stock       Int
+  version     Int           @default(1) // Khóa lạc quan (Optimistic Locking Task 10)
+  isActive    Boolean       @default(true)
+
+  categoryId  Int?
+  category    Category?     @relation(fields: [categoryId], references: [id])
+
+  sizes       ProductSize[]
+  orderItems  OrderItem[]
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model ProductSize {
+  id          Int         @id @default(autoincrement())
+  name        String
+  surcharge   Int         // Phụ thu theo VNĐ
+  isAvailable Boolean     @default(true)
+
+  productId   Int
+  product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  orderItems  OrderItem[]
+
+  @@unique([productId, name])
+}
+
+model Topping {
+  id                Int                @id @default(autoincrement())
+  name              String             @unique
+  price             Int                // Số nguyên VNĐ
+  imageUrl          String?
+  isAvailable       Boolean            @default(true)
+
+  categories        Category[]         // Quan hệ nhiều - nhiều với Category
+  orderItemToppings OrderItemTopping[]
+
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model Coupon {
+  id            Int          @id @default(autoincrement())
+  code          String       @unique
+  type          DiscountType
+  value         Int
+  minOrderValue Int
+  maxDiscount   Int?
+  usageLimit    Int?
+  usedCount     Int          @default(0)
+  startsAt      DateTime
+  expiresAt     DateTime
+  isActive      Boolean      @default(true)
+
+  orders        Order[]
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model Order {
+  id                  Int         @id @default(autoincrement())
+  userId              Int
+  couponId            Int?
+  status              OrderStatus @default(PENDING)
+  total               Int         // Tổng tiền gốc trước giảm giá
+  discountCode        String?
+  discountAmount      Int         @default(0)
+  finalAmount         Int         // Tiền thực tế cần thanh toán
+  loyaltyPointsEarned Int         @default(0)
+
+  user                User        @relation(fields: [userId], references: [id])
+  coupon              Coupon?     @relation(fields: [couponId], references: [id])
+  orderItems          OrderItem[]
+  payments            Payment[]   // Quan hệ 1 - N để cho phép thử lại thanh toán khi thất bại
+
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+}
+
+model OrderItem {
+  id            Int                @id @default(autoincrement())
+  orderId       Int
+  productId     Int
+  productSizeId Int?
+
+  // Snapshot giá trị sản phẩm tại thời điểm đặt hàng
+  productName   String
+  unitPrice     Int
+  sizeName      String?
+  sizeSurcharge Int                @default(0)
+
+  qty           Int
+  lineTotal     Int
+
+  order         Order              @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product       Product            @relation(fields: [productId], references: [id])
+  size          ProductSize?       @relation(fields: [productSizeId], references: [id])
+  toppings      OrderItemTopping[]
+}
+
+model OrderItemTopping {
+  id          Int       @id @default(autoincrement())
+  orderItemId Int
+  toppingId   Int
+
+  // Snapshot thông tin topping tại thời điểm đặt
+  toppingName String
+  price       Int
+  qty         Int       @default(1)
+  lineTotal   Int
+
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  topping     Topping   @relation(fields: [toppingId], references: [id])
+}
+
+model Payment {
+  id             Int           @id @default(autoincrement())
+  orderId        Int
+  idempotencyKey String        @unique // Khóa chống trùng lặp thanh toán (Task 10)
+  amount         Int
+  method         PaymentMethod
+  status         PaymentStatus @default(SUCCESS)
+  transactionId  String?
+
+  order          Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model Notification {
+  id        Int                  @id @default(autoincrement())
+  audience  NotificationAudience @default(ADMIN)
+  userId    Int?
+  type      NotificationType
+  title     String
+  message   String               @db.VarChar(500)
+  href      String?
+  orderId   Int?
+  productId Int?
+  dedupeKey String?              @unique
+  isRead    Boolean              @default(false)
+  readAt    DateTime?
+
+  user      User?                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime             @default(now())
+
+  @@index([audience, isRead, createdAt])
+  @@index([userId, isRead])
+}
