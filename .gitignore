@@ -1,0 +1,14 @@
+@"
+node_modules/
+dist/
+build/
+.next/
+out/
+.env
+.env.local
+.env.production
+pgdata/
+*.log
+.vscode/
+.idea/
+"@ | Out-File -FilePath .gitignore -Encoding utf8
