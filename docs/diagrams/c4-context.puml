@@ -9,12 +9,12 @@ title System Context diagram – BrewLite (C1)
 Person(customer, "Customer", "Khách hàng: xem menu, chọn size/topping, đặt đơn, thanh toán, theo dõi đơn")
 Person(admin, "Admin", "Nhân viên quầy / Quản lý: tiếp nhận đơn, cập nhật trạng thái, quản lý sản phẩm")
 
-System(brewlite, "BrewLite PWA", "Hệ thống đặt đồ uống mobile-first: menu, giỏ hàng, đơn hàng, thanh toán, theo dõi trạng thái đơn")
+System(brewlite, "BrewLite System", "Hệ thống bán cà phê trực tuyến: menu, giỏ hàng, đặt đơn với Khóa lạc quan, thanh toán an toàn lũy biến, tích điểm")
 
-System_Ext(payment, "Mock Payment Service", "Dịch vụ thanh toán mô phỏng Ví/Thẻ, trả kết quả thành công/thất bại")
+System_Ext(payment, "Mock Payment Service", "Dịch vụ thanh toán mô phỏng Ví/Thẻ, xử lý trừ tiền và phản hồi kết quả")
 
-Rel(customer, brewlite, "Sử dụng qua trình duyệt / PWA", "HTTPS")
-Rel(admin, brewlite, "Quản lý đơn hàng qua trình duyệt", "HTTPS")
-Rel(brewlite, payment, "Gửi yêu cầu thanh toán, nhận kết quả", "HTTPS, JSON")
+Rel(customer, brewlite, "Sử dụng ứng dụng trên thiết bị di động / PWA", "HTTPS")
+Rel(admin, brewlite, "Quản lý đơn hàng và thực đơn qua trình duyệt", "HTTPS")
+Rel(brewlite, payment, "Gửi yêu cầu thanh toán (kèm Idempotency-Key), nhận kết quả", "HTTPS, JSON")
 
 @enduml
