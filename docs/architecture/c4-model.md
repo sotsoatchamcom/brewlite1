@@ -41,9 +41,9 @@ Mở hộp BrewLite System thành các container chạy và triển khai đượ
 
 | Container | Công nghệ | Mã nguồn | Cổng | Vai trò |
 |---|---|---|---|---|
-| **Frontend** | Next.js (mobile-first, PWA) | `apps/web` | 3000 | Hiển thị giao diện menu, giỏ hàng, checkout, lịch sử và theo dõi đơn, màn hình Admin. Gọi Backend qua REST, không truy cập trực tiếp cơ sở dữ liệu. |
-| **Backend** | NestJS REST API | `apps/api` | 3001 | Xác thực và phân quyền JWT, validate dữ liệu, xử lý nghiệp vụ (tạo đơn, trừ tồn kho bằng Khóa lạc quan qua trường version, thanh toán có Idempotency, Order State Machine), health check `GET /health`. Là thành phần duy nhất truy cập cơ sở dữ liệu. |
-| **Database** | PostgreSQL 16 (Docker) | Migration và seed trong `apps/api` | 5432 | Lưu người dùng, sản phẩm, kích cỡ/topping, đơn hàng, thanh toán, mã giảm giá (Coupon), điểm tích lũy (Loyalty); schema quản lý qua Prisma migration. |
+| **Frontend** | Next.js (mobile-first, PWA) | `../../apps/web` | 3000 | Hiển thị giao diện menu, giỏ hàng, checkout, lịch sử và theo dõi đơn, màn hình Admin. Gọi Backend qua REST, không truy cập trực tiếp cơ sở dữ liệu. |
+| **Backend** | NestJS REST API | `../../apps/api` | 3001 | Xác thực và phân quyền JWT, validate dữ liệu, xử lý nghiệp vụ (tạo đơn, trừ tồn kho bằng Khóa lạc quan qua trường version, thanh toán có Idempotency, Order State Machine), health check `GET /health`. Là thành phần duy nhất truy cập cơ sở dữ liệu. |
+| **Database** | PostgreSQL 16 (Docker) | Migration và seed trong `../../apps/api` | 5432 | Lưu người dùng, sản phẩm, kích cỡ/topping, đơn hàng, thanh toán, mã giảm giá (Coupon), điểm tích lũy (Loyalty); schema quản lý qua Prisma migration. |
 
 ### 2.2 Giao thức giữa các khối
 
@@ -56,7 +56,7 @@ Mở hộp BrewLite System thành các container chạy và triển khai đượ
 
 Ghi chú:
 
-- Cổng 3000, 3001, 5432 là cổng khi chạy local bằng `docker-compose.yml`. Ở production, người dùng chỉ truy cập qua HTTPS (443) và cơ sở dữ liệu không mở ra Internet.
+- Cổng 3000, 3001, 5432 là cổng khi chạy local bằng `../../docker-compose.yml`. Ở production, người dùng chỉ truy cập qua HTTPS (443) và cơ sở dữ liệu không mở ra Internet.
 - Frontend gọi Backend từ cả phía server (SSR) lẫn trình duyệt, nên Backend cần bật CORS cho domain của Frontend và địa chỉ API lấy từ biến môi trường.
 
 ---
@@ -65,9 +65,9 @@ Ghi chú:
 
 | Thành phần | Mã nguồn | Liên quan |
 |---|---|---|
-| Frontend | `apps/web` | Ràng buộc C1, C15 trong `context-and-scope.md` |
-| Backend | `apps/api` | Ràng buộc C2, C14 |
-| Database | `apps/api` (migration, seed), `docker-compose.yml` | Ràng buộc C3, C4 |
+| Frontend | `../../apps/web` | Ràng buộc C1, C15 trong `context-and-scope.md` |
+| Backend | `../../apps/api` | Ràng buộc C2, C14 |
+| Database | `../../apps/api` (migration, seed), `docker-compose.yml` | Ràng buộc C3, C4 |
 | Mock Payment Service | Mô phỏng (sẽ có ADR riêng) | Stakeholder S6, giả định A7 |
 
 ---
