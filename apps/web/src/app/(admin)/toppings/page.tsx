@@ -13,7 +13,8 @@ import {
 } from "lucide-react";
 import { MOCK_TOPPINGS } from "@/lib/mockData";
 import type { Topping } from "@/lib/types";
-import { apiFetch, getImageUrl } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
+import { getImageUrl } from "@/components/ui/utils";
 import { EntityThumbnail } from "@/components/EntityThumbnail";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -100,7 +101,7 @@ export default function ToppingsPage() {
             price: Number(t.price),
             isAvailable: isToppingAvailable(t),
             file: null,
-            previewUrl: getImageUrl((t as any).imageUrl) ?? "",
+            previewUrl: getImageUrl((t as any).imageUrl, "toppings") ?? "",
         });
         setDialogOpen(true);
     }
@@ -253,17 +254,17 @@ export default function ToppingsPage() {
                                 <td className="px-4 py-3.5">
                                     <div className="flex justify-center">
                                         <EntityThumbnail
-                                            src={(topping as any).imageUrl}
+                                            src={getImageUrl((topping as any).imageUrl, "toppings")}
                                             alt={topping.name}
                                             size="lg"
-                                            fallbackIcon={<Layers className="w-6 h-6" />}
+                                            fallbackIcon={<Layers className="w-6 h-6 text-amber-700/60" />}
                                         />
                                     </div>
                                 </td>
                                 <td className="px-5 py-4">
-                    <span className="font-semibold text-base text-foreground">
-                      {topping.name}
-                    </span>
+                                    <span className="font-semibold text-base text-foreground">
+                                        {topping.name}
+                                    </span>
                                 </td>
                                 <td className="px-5 py-4 text-right font-semibold text-base">
                                     +{Number(topping.price).toLocaleString("vi-VN")}đ
@@ -371,11 +372,11 @@ export default function ToppingsPage() {
                                     <div className="flex flex-col items-center justify-center gap-1.5 px-4 py-4 rounded-2xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-accent/50 text-xs font-medium text-muted-foreground hover:text-foreground transition-all">
                                         <Upload className="w-5 h-5" />
                                         <span className="truncate max-w-[200px]">
-                      {form.file ? form.file.name : "Click to upload image"}
-                    </span>
+                                            {form.file ? form.file.name : "Click to upload image"}
+                                        </span>
                                         <span className="text-[11px] text-muted-foreground/70">
-                      PNG, JPG, WEBP up to 5MB
-                    </span>
+                                            PNG, JPG, WEBP up to 5MB
+                                        </span>
                                     </div>
                                     <input
                                         type="file"
