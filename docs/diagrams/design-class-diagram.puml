@@ -1,0 +1,188 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam roundcorner 6
+skinparam dpi 150
+skinparam nodesep 60
+skinparam ranksep 70
+skinparam linetype ortho
+
+' ================= STYLING =================
+skinparam class {
+  BackgroundColor #FFFFFF
+  ArrowColor #181818
+  BorderColor #181818
+  HeaderBackgroundColor #F3F4F6
+  FontSize 12
+}
+
+skinparam enum {
+  BackgroundColor #FFFFFF
+  ArrowColor #4B5563
+  BorderColor #4B5563
+  HeaderBackgroundColor #F9FAFB
+  FontSize 11
+}
+
+skinparam package {
+  BorderColor #9CA3AF
+  FontColor #1F2937
+  FontStyle bold
+  FontSize 13
+}
+
+' ================= 1. DOMAIN ENTITIES =================
+package "Core Domain Entities (Thực thể miền)" {
+
+  ' --- Trục chính: User -> Order -> OrderItem -> Product ---
+  class User {
+    + id: Int [PK]
+    + email: String
+    + passwordHash: String
+    + name: String
+    + phone: String
+    + loyaltyPoints: Int
+    + role: Role
+    + isActive: Boolean
+    + createdAt: DateTime
+    + updatedAt: DateTime
+  }
+
+  class Order {
+    + id: Int [PK]
+    + userId: Int [FK]
+    + couponId: Int [FK, Nullable]
+    + status: OrderStatus
+    + total: Int
+    + discountCode: String
+    + discountAmount: Int
+    + finalAmount: Int
+    + loyaltyPointsEarned: Int
+    + createdAt: DateTime
+    + updatedAt: DateTime
+    + calculateTotal(): Int
+    + canTransitionTo(nextStatus: OrderStatus): Boolean
+  }
+
+  class OrderItem {
+    + id: Int [PK]
+    + orderId: Int [FK]
+    + productId: Int [FK]
+    + productSizeId: Int [FK, Nullable]
+    + productName: String
+    + unitPrice: Int
+    + sizeName: String
+    + sizeSurcharge: Int
+    + qty: Int
+    + lineTotal: Int
+  }
+
+  class Product {
+    + id: Int [PK]
+    + name: String
+    + price: Int
+    + description: String
+    + stock: Int
+    + version: Int
+    + isActive: Boolean
+    + categoryId: Int [FK]
+    + createdAt: DateTime
+    + updatedAt: DateTime
+    + checkStock(qty: Int): Boolean
+  }
+
+  ' --- Hàng dưới: Thanh toán, Khuyến mãi & Tích điểm ---
+  class LoyaltyTransaction {
+    + id: Int [PK]
+    + userId: Int [FK]
+    + orderId: Int [FK]
+    + points: Int
+    + type: LoyaltyType
+    + createdAt: DateTime
+  }
+
+  class Payment {
+    + id: Int [PK]
+    + orderId: Int [FK]
+    + idempotencyKey: String
+    + amount: Int
+    + method: PaymentMethod
+    + status: PaymentStatus
+    + transactionId: String
+    + createdAt: DateTime
+  }
+
+  class Coupon {
+    + id: Int [PK]
+    + code: String
+    + type: DiscountType
+    + value: Int
+    + minOrderValue: Int
+    + maxDiscount: Int
+    + usageLimit: Int
+    + usedCount: Int
+    + startsAt: DateTime
+    + expiresAt: DateTime
+    + isActive: Boolean
+    + isValid(subtotal: Int): Boolean
+  }
+}
+
+' ================= 2. ENUMERATIONS =================
+package "Enumerations & Value Types (Danh mục Enum)" {
+  together {
+    enum Role {
+      CUSTOMER
+      ADMIN
+    }
+
+    enum OrderStatus {
+      PENDING
+      PAID
+      PREPARING
+      READY
+      COMPLETED
+      PAYMENT_FAILED
+      CANCELLED
+    }
+
+    enum PaymentMethod {
+      WALLET
+      CARD
+    }
+  }
+
+  together {
+    enum PaymentStatus {
+      SUCCESS
+      FAILED
+    }
+
+    enum DiscountType {
+      PERCENT
+      FIXED
+    }
+
+    enum LoyaltyType {
+      EARN
+      REVERT
+    }
+  }
+}
+
+' ================= 3. RELATIONSHIPS =================
+' Luồng chính (Ngang)
+User "1" -right-> "0..*" Order : places >
+Order "1" *-right-> "1..*" OrderItem : contains >
+OrderItem "0..*" -right-> "1" Product : references >
+
+' Luồng phụ thuộc (Dọc)
+User "1" -down-> "0..*" LoyaltyTransaction : owns >
+Order "1" -down-> "0..1" LoyaltyTransaction : yields >
+Order "1" -down-> "0..*" Payment : settles with >
+Order "0..*" -down-> "0..1" Coupon : applies >
+
+' Neo cụm Enum nằm gọn gàng bên dưới, không đè lên luồng nghiệp vụ
+Payment -[hidden]down-> OrderStatus
+@enduml

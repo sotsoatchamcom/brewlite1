@@ -1,0 +1,118 @@
+@startuml activity-checkout
+!pragma layout smetana
+
+skinparam conditionStyle diamond
+skinparam defaultFontName Arial
+skinparam wrapWidth 220
+skinparam maxMessageSize 220
+
+skinparam activity {
+  BackgroundColor White
+  BorderColor #2B2D42
+  FontSize 12
+}
+skinparam swimlane {
+  BorderColor #2B2D42
+  BorderThickness 1.5
+  TitleFontColor #1D3557
+  TitleFontSize 14
+}
+skinparam DefaultTextAlignment center
+
+title Activity Diagram - Luồng Đặt hàng & Thanh toán (BrewLite Checkout Flow)
+
+|#EBF5FB|Customer|
+|#FEF9E7|System|
+|#EAFAF1|Payment Gateway|
+
+|Customer|
+start
+:Mở màn hình Giỏ hàng;
+:Nhập mã giảm giá (nếu có);
+:Bấm nút "Thanh toán";
+
+' ===== KIỂM TRA ĐĂNG NHẬP & TỒN KHO =====
+|System|
+:Kiểm tra trạng thái đăng nhập;
+
+' SỬA LẠI ĐIỀU KIỆN ĐĂNG NHẬP ĐỂ HIỂN THỊ RÕ CÓ/KHÔNG
+if (Đã đăng nhập?) then (Có)
+  ' Đã đăng nhập thì đi tiếp
+else (Không)
+  |Customer|
+  :Đăng nhập;
+  |System|
+endif
+
+repeat
+  |System|
+  :Kiểm tra giỏ hàng & tồn kho;
+  
+  |Customer|
+backward: Hiển thị "Món đã hết hoặc không đủ số lượng"
+<size:10><i>Đơn không được tạo, không trừ tồn kho
+Khách cập nhật lại Giỏ hàng;
+  |System|
+' SỬA NHÃN VÒNG LẶP TỒN KHO THÀNH KHÔNG / CÓ
+repeat while (Đủ tồn kho?) is (Không) not (Có)
+
+:Tạo đơn hàng (PENDING)
+<size:10><i>Đơn chưa thanh toán quá thời hạn quy định
+<size:10><i>sẽ bị hệ thống tự hủy;
+:Trừ tồn kho & Tăng lượt dùng mã;
+
+|Customer|
+:Chọn phương thức (Ví / Thẻ);
+
+' ===== VÒNG LẶP THANH TOÁN =====
+repeat
+  |Customer|
+  :Client sinh Idempotency-Key mới
+  <size:10><i>Mỗi lượt thử lại sinh Key mới;
+  :Gửi yêu cầu thanh toán kèm Key;
+
+  |System|
+  :Chuyển yêu cầu sang cổng thanh toán;
+
+  |Payment Gateway|
+  :Xử lý giao dịch;
+
+  |System|
+  if (Giao dịch thành công?) then (Có)
+    :Cập nhật đơn hàng -> PAID;
+    :Cộng điểm tích lũy (10.000đ = 1 điểm);
+    :Làm trống Giỏ hàng;
+    :Gửi thông báo cho Quản trị viên;
+
+    |Customer|
+    :Hiển thị màn hình Đặt hàng thành công;
+    :Chuyển sang Theo dõi đơn hàng;
+    stop
+  else (Không)
+    |System|
+    :Cập nhật đơn hàng -> PAYMENT_FAILED;
+    :Gửi thông báo cho Quản trị viên;
+
+    |Customer|
+    :Hiển thị "Thanh toán thất bại";
+  endif
+' NHÃN VÒNG LẶP THỬ LẠI ĐÃ CHUẨN CÓ / KHÔNG
+repeat while (Khách hàng bấm "Thử lại"?) is (Có) not (Không)
+
+' ===== KHÔNG THỬ LẠI =====
+|Customer|
+:Đơn hàng giữ trạng thái PAYMENT_FAILED;
+:Khách có thể thanh toán lại từ "Đơn của tôi";
+stop
+
+' ===== NHÁNH HỦY ĐƠN (Xử lý ngầm định) =====
+|System|
+:Quá thời hạn thanh toán (hoặc Admin hủy);
+:Cập nhật đơn hàng -> CANCELLED;
+:Hoàn trả tồn kho & lượt dùng mã
+<size:10><i>Chưa cộng điểm nên không thu hồi;
+
+|Customer|
+:Hiển thị "Đơn hàng đã bị hủy";
+stop
+@enduml
