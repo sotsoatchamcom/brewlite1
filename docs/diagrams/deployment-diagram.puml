@@ -1,0 +1,102 @@
+@startuml deployment-diagram
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam dpi 150
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam packageFontSize 12
+skinparam nodesep 40
+skinparam ranksep 40
+
+skinparam package {
+  BorderColor #64748B
+  BackgroundColor #F8FAFC
+  FontStyle bold
+}
+skinparam node {
+  BorderColor #1E293B
+  BackgroundColor #FFFFFF
+}
+skinparam component {
+  BorderColor #0284C7
+  BackgroundColor #E0F2FE
+}
+skinparam database {
+  BorderColor #7C3AED
+  BackgroundColor #EDE9FE
+}
+
+title UML Deployment Diagram – Kiến trúc Triển khai BrewLite (Task 3.2)
+
+' ================= CỘT TRÁI: LOCAL & CI/CD =================
+together {
+  package "3. Ranh giới Local Dev" as LocalZone {
+    node "<<Developer Host>>\nDocker Desktop" as LocalHost {
+      component "docker-compose.yml\n[.env.example / .env]" as Compose
+    }
+  }
+
+  package "2. Ranh giới CI/CD (GitHub)" as CICDZone {
+    node "<<CI Runner>>\nGitHub Actions" as GHA {
+      component "Pipeline: Lint -> Test -> Build\n[CI Secrets]" as Pipeline
+    }
+    node "<<Container Registry>>\nDocker Hub / GHCR" as Registry {
+      artifact "Docker Images\n[web & api images]" as Images
+    }
+  }
+}
+
+' ================= CỘT PHẢI: CLIENT & PRODUCTION =================
+package "1. Ranh giới Người dùng" as ClientZone {
+  node "<<device>>\nSmartphone / Desktop" as Device {
+    component "Trình duyệt / PWA Client\n[Next.js UI, LocalStorage]" as PWA
+  }
+}
+
+package "4. Ranh giới Production (Cloud Platform: Render / VPS)" as ProdZone #F0FDF4 {
+
+  node "<<Reverse Proxy / CDN>>\nEdge Gateway & SSL Termination [HTTPS :443]" as EdgeProxy #DCFCE7
+
+  package "Mạng nội bộ (Private Bridge Network)" as PrivateNet #FFFFFF {
+
+    node "<<container>>\nbrewlite-web [:3000]" as WebNode {
+      component "Next.js App Router (SSR)\n[apps/web]\nEnv: NEXT_PUBLIC_API_URL" as NextApp
+    }
+
+    node "<<container>>\nbrewlite-api [:3001]" as ApiNode {
+      component "NestJS REST API [apps/api]\n• Endpoint: GET /health\n• Logger & Interceptors\n• Secrets: DATABASE_URL, JWT_SECRET" as NestApp
+    }
+
+    node "<<container>>\nbrewlite-db [:5432]" as DbNode {
+      database "PostgreSQL 16\n[Prisma Migrations]" as Postgres
+      storage "<<Persistent Volume>>\npostgres_data" as Volume
+    }
+  }
+
+  node "<<Monitoring & Logging>>\nPlatform Health Probe & Central Log" as Monitor #FEF9C3
+}
+
+package "5. Dịch vụ Bên ngoài" as ExtZone {
+  node "<<External System>>\nMock Payment Gateway / VietQR [HTTPS REST]" as MockPay
+}
+
+' ================= ĐỊNH TUYẾN LIÊN KẾT =================
+LocalHost -right-> Pipeline : "1. Git Push / PR"
+Pipeline -down-> Images : "2. Build & Push"
+
+Images ..> EdgeProxy : "3. CD Deploy"
+
+PWA -down-> EdgeProxy : "4. HTTPS (:443)\n[Bearer JWT, Idempotency-Key]"
+
+EdgeProxy -down-> NextApp : "5. Route UI (:3000)"
+EdgeProxy -down-> NestApp : "6. Route /api/* (:3001)"
+
+NextApp .right.> NestApp : "7. SSR Internal Call"
+
+NestApp -down-> Postgres : "8. Prisma TCP (:5432)"
+Postgres -right-> Volume : "9. Lưu trữ bền vững"
+
+NestApp -down-> Monitor : "10. GET /health & Logs"
+NestApp -right-> MockPay : "11. POST /mock-pay (HTTPS)"
+
+@enduml

@@ -1,0 +1,26 @@
+@startuml c4-container
+!include <C4/C4_Container>
+
+LAYOUT_TOP_DOWN()
+LAYOUT_WITH_LEGEND()
+
+title Container diagram – BrewLite (C2)
+
+Person(customer, "Customer", "Khách hàng đặt và thanh toán đồ uống")
+Person(admin, "Admin", "Nhân viên quầy / Quản lý cửa hàng")
+
+System_Boundary(brewlite, "Hệ thống BrewLite (Monorepo: apps/web, apps/api)") {
+    Container(web, "Frontend", "Next.js, PWA, port 3000", "Giao diện mobile-first: menu, giỏ hàng, checkout, lịch sử, theo dõi đơn và trang quản trị")
+    Container(api, "Backend", "NestJS REST API, port 3001", "Xác thực JWT, trừ kho bằng Khóa lạc quan (version), thanh toán Idempotency, Order State Machine")
+    ContainerDb(db, "Database", "PostgreSQL 16, port 5432, Docker", "Lưu người dùng, sản phẩm, đơn hàng, thanh toán, coupon, loyalty; quản lý qua Prisma migration")
+}
+
+System_Ext(payment, "Mock Payment Service", "Dịch vụ thanh toán mô phỏng Ví/Thẻ")
+
+Rel(customer, web, "Truy cập menu, đặt đơn và thanh toán", "HTTPS")
+Rel(admin, web, "Tiếp nhận đơn, cập nhật trạng thái chế biến", "HTTPS")
+Rel(web, api, "Gọi API nghiệp vụ", "REST, JSON/HTTPS, Bearer JWT")
+Rel(api, db, "Đọc/ghi dữ liệu có giao dịch ($transaction)", "Prisma Client, TCP 5432")
+Rel(api, payment, "Yêu cầu thanh toán kèm Idempotency-Key", "HTTPS, JSON")
+
+@enduml
