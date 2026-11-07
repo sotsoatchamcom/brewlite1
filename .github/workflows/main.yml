@@ -2,7 +2,7 @@ name: CI Quality Gate
 
 on:
   push:
-    branches: [ "main", "develop", "docs/*" ]
+    branches: [ "main", "develop" ]
   pull_request:
     branches: [ "main", "develop" ]
 
@@ -20,25 +20,41 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Dependencies
+      # --- 1. KIỂM ĐỊNH BACKEND (NestJS API) ---
+      - name: Install Dependencies (API)
         run: |
-          echo "Checking dependencies across monorepo..."
-          if [ -f package.json ]; then npm install; else echo "Monorepo structure verified."; fi
+          cd apps/api
+          npm install
 
-      - name: Check Code Quality (Lint)
+      - name: Lint & Compile Check (API)
         run: |
-          echo "Executing ESLint checks across monorepo..."
-          echo "Linting completed: 0 errors, 0 warnings."
+          cd apps/api
+          npm run lint --if-present
 
-      - name: Run Automated Tests
+      - name: Run Unit Tests (API)
         run: |
-          echo "Executing Unit and Integration Tests..."
-          echo "PASS apps/api/src/orders/orders.service.spec.ts"
-          echo "PASS apps/api/src/payments/payments.service.spec.ts"
-          echo "Test Suites: 2 passed, 2 total"
-          echo "Tests:       6 passed, 6 total"
+          cd apps/api
+          npm test --if-present
 
-      - name: Build Application
+      - name: Build Backend (API)
         run: |
-          echo "Compiling Next.js PWA and NestJS API..."
-          echo "Build completed successfully."
+          cd apps/api
+          npm run build --if-present
+
+      # --- 2. KIỂM ĐỊNH FRONTEND (Next.js PWA) ---
+      - name: Install Dependencies (Web)
+        run: |
+          cd apps/web
+          npm install
+
+      - name: Lint Frontend (Web)
+        run: |
+          cd apps/web
+          npm run lint --if-present
+
+      - name: Build Frontend (Web)
+        run: |
+          cd apps/web
+          npm run build --if-present
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:3001
