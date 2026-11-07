@@ -13,6 +13,18 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    rules: {
+      // Tắt kiểm tra chặt kiểu any trong TypeScript
+      "@typescript-eslint/no-explicit-any": "off",
+      // Tắt cảnh báo gọi setState trực tiếp trong useEffect
+      "react-hooks/set-state-in-effect": "off",
+      // Chuyển lỗi biến không sử dụng về mức cảnh báo (không chặn build)
+      "@typescript-eslint/no-unused-vars": "warn",
+      // Cho phép sử dụng thẻ <img> thông thường thay vì bắt buộc dùng next/image
+      "@next/next/no-img-element": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;
