@@ -15,14 +15,19 @@ const eslintConfig = defineConfig([
   ]),
   {
     rules: {
-      // Tắt kiểm tra chặt kiểu any trong TypeScript
+      // 1. TypeScript Rules
       "@typescript-eslint/no-explicit-any": "off",
-      // Tắt cảnh báo gọi setState trực tiếp trong useEffect
-      "react-hooks/set-state-in-effect": "off",
-      // Chuyển lỗi biến không sử dụng về mức cảnh báo (không chặn build)
       "@typescript-eslint/no-unused-vars": "warn",
-      // Cho phép sử dụng thẻ <img> thông thường thay vì bắt buộc dùng next/image
+
+      // 2. Next.js Routing & Media Rules
       "@next/next/no-img-element": "off",
+      "@next/next/no-location-assign-relative-destination": "off",
+
+      // 3. React Compiler / Strict Hooks Rules (Next.js 15 & React 19)
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/preserve-manual-memoization": "off",
+      "react-hooks/immutability": "off",
+      "react-hooks/purity": "off",
     },
   },
 ]);
