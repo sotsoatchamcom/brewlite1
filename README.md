@@ -161,7 +161,7 @@ brewlite1/
 
 ## 6. Hướng dẫn cài đặt & Khởi chạy hệ thống
 
-### Cách 1: Khởi chạy bằng Docker Compose (Khuyên dùng khi Thuyết trình / Chấm bài)
+### Cách 1: Khởi chạy bằng Docker Compose
 
 Phương pháp này đóng gói sẵn môi trường, không lo lỗi sai phiên bản Node hay xung đột thư viện.
 
@@ -255,9 +255,6 @@ Hệ thống đã nạp sẵn dữ liệu kiểm thử phục vụ việc chấm
 ---
 
 ## 9. Kịch bản kiểm thử & Trình diễn thực tế (Demo Script)
-
-Khi demo sản phẩm cho hội đồng/giảng viên, bạn có thể thực hiện theo kịch bản mẫu sau:
-
 1. **Kịch bản 1: Luồng thanh toán chuẩn (Happy Path)**
   - Đăng nhập tài khoản khách hàng -> Chọn món nước và chọn thêm topping trân châu -> Bấm thanh toán.
   - Chọn mã giảm giá -> Bấm thanh toán bằng VietQR -> Bấm **"Xác nhận đã chuyển khoản (Demo)"**.
@@ -271,4 +268,4 @@ Khi demo sản phẩm cho hội đồng/giảng viên, bạn có thể thực hi
 
 3. **Kịch bản 3: Kiểm chứng kỹ thuật bằng Unit Test (Automated Verification)**
   - Mở Terminal chạy `npm run test:robustness`.
-  - Cho hội đồng xem 18 test case passed màu xanh lá để chứng minh tính đúng đắn của State Machine, Idempotency và Concurrency Control.
+  - Xem 18 test case passed màu xanh lá để chứng minh tính đúng đắn của State Machine, Idempotency và Concurrency Control.
