@@ -18,12 +18,25 @@ export class ToppingsService {
       throw new ConflictException('Tên topping đã tồn tại!');
     }
 
-    return this.prisma.topping.create({ data: dto });
+    const { categoryIds, ...data } = dto;
+
+    return this.prisma.topping.create({
+      data: {
+        ...data,
+        categories: categoryIds && categoryIds.length > 0
+            ? { connect: categoryIds.map((id: number) => ({ id: Number(id) })) }
+            : undefined,
+      },
+      include: {
+        categories: {
+          select: { id: true, name: true },
+        },
+      },
+    });
   }
 
-  // Hỗ trợ phân trang, tìm kiếm và lọc trạng thái ẩn/hiện
   async findAll(query: QueryToppingDto, includeHidden: boolean = false) {
-    const { search, page, limit } = query;
+    const { search, categoryId, page, limit } = query;
     const skip = (page - 1) * limit;
 
     const whereCondition: any = {};
@@ -33,7 +46,14 @@ export class ToppingsService {
     }
 
     if (search) {
-      whereCondition.name = { contains: search };
+      whereCondition.name = { contains: search, mode: 'insensitive' };
+    }
+
+    // Nếu truyền categoryId thì chỉ lấy các Topping được gán danh mục này
+    if (categoryId) {
+      whereCondition.categories = {
+        some: { id: Number(categoryId) },
+      };
     }
 
     const [data, total] = await Promise.all([
@@ -41,6 +61,11 @@ export class ToppingsService {
         where: whereCondition,
         skip,
         take: limit,
+        include: {
+          categories: {
+            select: { id: true, name: true },
+          },
+        },
         orderBy: { id: 'desc' },
       }),
       this.prisma.topping.count({ where: whereCondition }),
@@ -60,11 +85,16 @@ export class ToppingsService {
   async findOne(id: number, includeHidden: boolean = false) {
     const topping = await this.prisma.topping.findUnique({
       where: { id },
+      include: {
+        categories: {
+          select: { id: true, name: true },
+        },
+      },
     });
 
     if (!topping || (!topping.isAvailable && !includeHidden)) {
       throw new NotFoundException(
-        `Không tìm thấy topping ID ${id} hoặc đã ngừng bán`,
+          `Không tìm thấy topping ID ${id} hoặc đã ngừng bán`,
       );
     }
     return topping;
@@ -82,9 +112,21 @@ export class ToppingsService {
       }
     }
 
+    const { categoryIds, ...data } = dto;
+
     return this.prisma.topping.update({
       where: { id },
-      data: dto,
+      data: {
+        ...data,
+        categories: categoryIds !== undefined
+            ? { set: categoryIds.map((cId: number) => ({ id: Number(cId) })) }
+            : undefined,
+      },
+      include: {
+        categories: {
+          select: { id: true, name: true },
+        },
+      },
     });
   }
 
