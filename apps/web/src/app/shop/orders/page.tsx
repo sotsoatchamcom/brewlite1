@@ -164,7 +164,7 @@ export default function OrderHistoryPage() {
             } as React.CSSProperties}
         >
             <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6 pb-24 sm:pb-12">
-                {/* Header trang (Mobile First: linh hoạt không bị gãy dòng chữ) */}
+                {/* Header trang */}
                 <div className="flex items-center justify-between border-b border-[#E8E2D9] pb-3 sm:pb-4 gap-2">
                     <div className="min-w-0">
                         <h1 className="text-lg sm:text-2xl font-bold tracking-tight text-[#2B2118] flex items-center gap-2 truncate">
@@ -328,20 +328,33 @@ export default function OrderHistoryPage() {
                                             </span>
                                             <div className="divide-y divide-[#E8E2D9] bg-[#FAF7F2] rounded-xl p-2.5 sm:p-3 border border-[#E8E2D9]">
                                                 {itemList.map((item: any, idx: number) => {
-                                                    const itemName = item.product?.name || item.name || "Cà phê BrewLite";
-                                                    const itemQty = item.quantity || item.qty || 1;
-                                                    const itemPrice = item.price || item.unitPrice || 0;
-                                                    const rawToppings = item.toppings || item.toppingNames || [];
+                                                    const itemName =
+                                                        item.productName || item.product?.name || item.name || "Cà phê BrewLite";
+                                                    const itemQty = item.qty || item.quantity || 1;
 
-                                                    // Lọc sạch topping rỗng/undefined, loại bỏ lỗi hiển thị "+ ,"
+                                                    // Ưu tiên lineTotal từ DB (đã tính đủ món + size + topping * số lượng)
+                                                    const itemTotalPrice =
+                                                        item.lineTotal ?? ((item.unitPrice || item.price || 0) * itemQty);
+
+                                                    // Đọc đúng trường toppingName từ bảng OrderItemTopping
+                                                    const rawToppings =
+                                                        item.toppings || item.orderItemToppings || item.toppingNames || [];
                                                     const toppingList = (Array.isArray(rawToppings) ? rawToppings : [])
-                                                        .map((t: any) => (typeof t === "string" ? t.trim() : t?.name?.trim()))
-                                                        .filter((t: any) => Boolean(t) && t.length > 0);
+                                                        .map((t: any) => {
+                                                            if (typeof t === "string") return t.trim();
+                                                            return (
+                                                                t?.toppingName ||
+                                                                t?.name ||
+                                                                t?.topping?.name ||
+                                                                ""
+                                                            )?.trim();
+                                                        })
+                                                        .filter((t: string) => Boolean(t) && t.length > 0);
 
                                                     return (
                                                         <div
-                                                            key={idx}
-                                                            className="py-1.5 first:pt-0 last:pb-0 flex items-start justify-between text-xs gap-2"
+                                                            key={item.id || idx}
+                                                            className="py-2 first:pt-0 last:pb-0 flex items-start justify-between text-xs gap-2"
                                                         >
                                                             <div className="space-y-0.5 min-w-0">
                                                                 <div className="font-semibold text-[#2B2118] truncate">
@@ -361,8 +374,8 @@ export default function OrderHistoryPage() {
                                                                     </div>
                                                                 )}
                                                             </div>
-                                                            <span className="font-semibold text-[#2B2118] shrink-0">
-                                                                {safeFormatVND(itemPrice * itemQty)}
+                                                            <span className="font-semibold text-[#2B2118] shrink-0 text-right">
+                                                                {safeFormatVND(itemTotalPrice)}
                                                             </span>
                                                         </div>
                                                     );
