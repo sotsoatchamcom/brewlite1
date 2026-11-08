@@ -5,9 +5,8 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // Override default ignores of eslint-config-next.
+  // Bỏ qua các thư mục build và tệp sinh tự động
   globalIgnores([
-    // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
     "build/**",
@@ -15,19 +14,17 @@ const eslintConfig = defineConfig([
   ]),
   {
     rules: {
-      // 1. TypeScript Rules
+      // Tắt kiểm tra chặt kiểu any trong TypeScript
       "@typescript-eslint/no-explicit-any": "off",
+
+      // Chuyển lỗi biến không sử dụng về mức cảnh báo (không chặn build)
       "@typescript-eslint/no-unused-vars": "warn",
 
-      // 2. Next.js Routing & Media Rules
+      // Cho phép sử dụng thẻ <img> thông thường thay vì bắt buộc dùng next/image
       "@next/next/no-img-element": "off",
-      "@next/next/no-location-assign-relative-destination": "off",
 
-      // 3. React Compiler / Strict Hooks Rules (Next.js 15 & React 19)
-      "react-hooks/set-state-in-effect": "off",
-      "react-hooks/preserve-manual-memoization": "off",
-      "react-hooks/immutability": "off",
-      "react-hooks/purity": "off",
+      // Tắt kiểm tra thiếu dependency trong useEffect (nếu cần bỏ qua cảnh báo hook)
+      "react-hooks/exhaustive-deps": "warn",
     },
   },
 ]);
