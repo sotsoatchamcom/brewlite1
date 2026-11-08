@@ -40,7 +40,6 @@ export default function ShopHeader({ rightSlot }: ShopHeaderProps = {}) {
     const { totalQty, hydrated, clearCart } = useCart();
     const { user, isAuthenticated, isLoading, logout } = useAuth();
 
-    // State Modal đổi mật khẩu
     const [showChangePassword, setShowChangePassword] = useState(false);
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
@@ -97,17 +96,18 @@ export default function ShopHeader({ rightSlot }: ShopHeaderProps = {}) {
 
     return (
         <>
-            <header className="h-16 bg-[#FFFFFF] border-b border-[#E8E2D9] px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs">
+            {/* Header: px-3 trên mobile, px-6 trên desktop */}
+            <header className="h-14 sm:h-16 bg-[#FFFFFF] border-b border-[#E8E2D9] px-3 sm:px-6 flex items-center justify-between sticky top-0 z-40 shadow-xs">
                 {/* Logo thương hiệu */}
-                <Link href="/shop" className="flex items-center gap-2.5 group">
-                    <div className="w-8 h-8 rounded-xl bg-[#2B2118] text-[#FAF7F2] flex items-center justify-center shadow-xs transition-transform group-hover:scale-105">
-                        <Coffee className="w-4 h-4 text-[#FAF7F2]" />
+                <Link href="/shop" className="flex items-center gap-2 group shrink-0">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#2B2118] text-[#FAF7F2] flex items-center justify-center shadow-xs transition-transform group-hover:scale-105">
+                        <Coffee className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FAF7F2]" />
                     </div>
-                    <span className="font-bold text-base tracking-tight text-[#2B2118]">BrewLite</span>
+                    <span className="font-bold text-sm sm:text-base tracking-tight text-[#2B2118]">BrewLite</span>
                 </Link>
 
                 {/* Danh mục nút chức năng bên phải */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2">
                     {rightSlot}
 
                     {/* 1. Chuông thông báo */}
@@ -119,7 +119,7 @@ export default function ShopHeader({ rightSlot }: ShopHeaderProps = {}) {
                             asChild
                             variant="ghost"
                             size="icon"
-                            className="rounded-xl text-[#2B2118] hover:bg-[#FAF7F2] transition-colors"
+                            className="rounded-xl text-[#2B2118] hover:bg-[#FAF7F2] transition-colors w-9 h-9 sm:w-10 sm:h-10"
                             aria-label="Lịch sử đơn hàng"
                             title="Lịch sử đơn hàng"
                         >
@@ -133,14 +133,14 @@ export default function ShopHeader({ rightSlot }: ShopHeaderProps = {}) {
                     <Button
                         asChild
                         variant="outline"
-                        className="rounded-xl gap-2 border-[#E8E2D9] text-[#2B2118] hover:bg-[#FAF7F2] transition-colors"
+                        className="rounded-xl gap-1.5 sm:gap-2 border-[#E8E2D9] text-[#2B2118] hover:bg-[#FAF7F2] transition-colors px-2.5 sm:px-3 h-9 sm:h-10"
                         aria-label={`Giỏ hàng, ${totalQty} ly`}
                     >
                         <Link href="/shop/cart">
                             <ShoppingBag className="w-4 h-4 text-[#B45F2B]" />
                             <span className="hidden sm:inline font-semibold">Giỏ hàng</span>
                             {hydrated && totalQty > 0 && (
-                                <span className="min-w-5 h-5 px-1.5 rounded-full bg-[#B45F2B] text-white text-xs font-bold flex items-center justify-center">
+                                <span className="min-w-4.5 h-4.5 sm:min-w-5 sm:h-5 px-1 rounded-full bg-[#B45F2B] text-white text-[10px] sm:text-xs font-bold flex items-center justify-center">
                                     {totalQty}
                                 </span>
                             )}
@@ -149,24 +149,24 @@ export default function ShopHeader({ rightSlot }: ShopHeaderProps = {}) {
 
                     {/* 4. Menu tài khoản */}
                     {isLoading ? (
-                        <Skeleton className="h-9 w-28 rounded-xl bg-[#E8E2D9]/60" />
+                        <Skeleton className="h-8 w-8 sm:h-9 sm:w-28 rounded-xl bg-[#E8E2D9]/60" />
                     ) : isAuthenticated ? (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     variant="ghost"
-                                    className="rounded-xl gap-2 px-2 hover:bg-[#FAF7F2] transition-colors"
+                                    className="rounded-xl gap-1.5 px-1 sm:px-2 hover:bg-[#FAF7F2] transition-colors h-9 sm:h-10"
                                     aria-label="Menu tài khoản"
                                 >
-                                    <span className="w-7 h-7 rounded-full bg-[#2B2118] text-white text-xs font-bold flex items-center justify-center">
+                                    <span className="w-7 h-7 rounded-full bg-[#2B2118] text-white text-xs font-bold flex items-center justify-center shrink-0">
                                         {displayName.charAt(0).toUpperCase()}
                                     </span>
-                                    <span className="max-w-32 truncate text-sm font-semibold text-[#2B2118] hidden sm:inline">
+                                    <span className="max-w-28 truncate text-sm font-semibold text-[#2B2118] hidden sm:inline">
                                         {displayName}
                                     </span>
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="rounded-xl w-56 bg-[#FFFFFF] border-[#E8E2D9] shadow-md">
+                            <DropdownMenuContent align="end" className="rounded-xl w-56 bg-[#FFFFFF] border-[#E8E2D9] shadow-md z-50">
                                 <DropdownMenuLabel className="font-normal">
                                     <p className="text-sm font-semibold text-[#2B2118] truncate">{displayName}</p>
                                     {user?.email && <p className="text-xs text-[#6B5E52] truncate">{user.email}</p>}
@@ -210,21 +210,21 @@ export default function ShopHeader({ rightSlot }: ShopHeaderProps = {}) {
                             </DropdownMenuContent>
                         </DropdownMenu>
                     ) : (
-                        <Button asChild className="rounded-xl gap-2 bg-[#B45F2B] hover:bg-[#9A4F22] text-white font-semibold shadow-xs">
-                            <Link href={LOGIN_PATH}><LogIn className="w-4 h-4" /> Đăng nhập</Link>
+                        <Button asChild className="rounded-xl gap-1.5 bg-[#B45F2B] hover:bg-[#9A4F22] text-white font-semibold shadow-xs text-xs sm:text-sm h-8 sm:h-9 px-2.5 sm:px-3">
+                            <Link href={LOGIN_PATH}><LogIn className="w-3.5 h-3.5" /> <span>Đăng nhập</span></Link>
                         </Button>
                     )}
                 </div>
             </header>
 
-            {/* MODAL ĐỔI MẬT KHẨU */}
+            {/* MODAL ĐỔI MẬT KHẨU (Tương thích Mobile) */}
             {showChangePassword && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-                    <div className="bg-[#FFFFFF] border border-[#E8E2D9] w-full max-w-md rounded-2xl p-6 shadow-xl relative space-y-5">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-3 sm:p-4 animate-in fade-in duration-150">
+                    <div className="bg-[#FFFFFF] border border-[#E8E2D9] w-full max-w-md rounded-2xl p-5 sm:p-6 shadow-xl relative space-y-4 sm:space-y-5">
                         <div className="flex items-center justify-between border-b border-[#E8E2D9] pb-3">
                             <div className="flex items-center gap-2">
                                 <KeyRound className="w-5 h-5 text-[#B45F2B]" />
-                                <h3 className="font-bold text-base text-[#2B2118]">Đổi mật khẩu tài khoản</h3>
+                                <h3 className="font-bold text-sm sm:text-base text-[#2B2118]">Đổi mật khẩu tài khoản</h3>
                             </div>
                             <button
                                 type="button"
@@ -235,39 +235,39 @@ export default function ShopHeader({ rightSlot }: ShopHeaderProps = {}) {
                             </button>
                         </div>
 
-                        <form onSubmit={handleChangePasswordSubmit} className="space-y-4">
-                            <div className="space-y-1.5">
+                        <form onSubmit={handleChangePasswordSubmit} className="space-y-3 sm:space-y-4">
+                            <div className="space-y-1">
                                 <label className="text-xs font-semibold text-[#2B2118]">Mật khẩu hiện tại</label>
                                 <input
                                     type="password"
                                     placeholder="••••••••"
                                     value={currentPassword}
                                     onChange={(e) => setCurrentPassword(e.target.value)}
-                                    className="w-full bg-[#FFFFFF] border border-[#E8E2D9] rounded-xl px-3.5 py-2 text-sm text-[#2B2118] placeholder:text-[#6B5E52]/50 focus:outline-none focus:border-[#B45F2B] focus:ring-2 focus:ring-[#B45F2B]/20 transition-all"
+                                    className="w-full bg-[#FFFFFF] border border-[#E8E2D9] rounded-xl px-3 py-2 text-sm text-[#2B2118] placeholder:text-[#6B5E52]/50 focus:outline-none focus:border-[#B45F2B] focus:ring-2 focus:ring-[#B45F2B]/20 transition-all"
                                     required
                                 />
                             </div>
 
-                            <div className="space-y-1.5">
+                            <div className="space-y-1">
                                 <label className="text-xs font-semibold text-[#2B2118]">Mật khẩu mới</label>
                                 <input
                                     type="password"
-                                    placeholder="Tối thiểu 8 ký tự (hoa, thường, số, ký tự đặc biệt)"
+                                    placeholder="Tối thiểu 8 ký tự"
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
-                                    className="w-full bg-[#FFFFFF] border border-[#E8E2D9] rounded-xl px-3.5 py-2 text-sm text-[#2B2118] placeholder:text-[#6B5E52]/50 focus:outline-none focus:border-[#B45F2B] focus:ring-2 focus:ring-[#B45F2B]/20 transition-all"
+                                    className="w-full bg-[#FFFFFF] border border-[#E8E2D9] rounded-xl px-3 py-2 text-sm text-[#2B2118] placeholder:text-[#6B5E52]/50 focus:outline-none focus:border-[#B45F2B] focus:ring-2 focus:ring-[#B45F2B]/20 transition-all"
                                     required
                                 />
                             </div>
 
-                            <div className="space-y-1.5">
+                            <div className="space-y-1">
                                 <label className="text-xs font-semibold text-[#2B2118]">Xác nhận mật khẩu mới</label>
                                 <input
                                     type="password"
                                     placeholder="Nhập lại mật khẩu mới"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="w-full bg-[#FFFFFF] border border-[#E8E2D9] rounded-xl px-3.5 py-2 text-sm text-[#2B2118] placeholder:text-[#6B5E52]/50 focus:outline-none focus:border-[#B45F2B] focus:ring-2 focus:ring-[#B45F2B]/20 transition-all"
+                                    className="w-full bg-[#FFFFFF] border border-[#E8E2D9] rounded-xl px-3 py-2 text-sm text-[#2B2118] placeholder:text-[#6B5E52]/50 focus:outline-none focus:border-[#B45F2B] focus:ring-2 focus:ring-[#B45F2B]/20 transition-all"
                                     required
                                 />
                             </div>
@@ -276,22 +276,22 @@ export default function ShopHeader({ rightSlot }: ShopHeaderProps = {}) {
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    className="flex-1 rounded-xl border-[#E8E2D9] text-[#2B2118] hover:bg-[#FAF7F2]"
+                                    className="flex-1 rounded-xl border-[#E8E2D9] text-[#2B2118] hover:bg-[#FAF7F2] h-10 text-xs sm:text-sm"
                                     onClick={() => setShowChangePassword(false)}
                                 >
                                     Hủy
                                 </Button>
                                 <Button
                                     type="submit"
-                                    className="flex-1 rounded-xl bg-[#B45F2B] hover:bg-[#9A4F22] text-white font-semibold"
+                                    className="flex-1 rounded-xl bg-[#B45F2B] hover:bg-[#9A4F22] text-white font-semibold h-10 text-xs sm:text-sm"
                                     disabled={isSubmitting}
                                 >
                                     {isSubmitting ? (
-                                        <span className="flex items-center gap-2">
+                                        <span className="flex items-center gap-1.5">
                                             <Loader2 className="w-4 h-4 animate-spin" /> Đang lưu...
                                         </span>
                                     ) : (
-                                        <span className="flex items-center gap-2">
+                                        <span className="flex items-center gap-1.5">
                                             <CheckCircle2 className="w-4 h-4" /> Cập nhật
                                         </span>
                                     )}

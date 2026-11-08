@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Bell, CheckCheck, Loader2 } from "lucide-react";
+import { Bell, CheckCheck, Loader2, X, BellRing } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
@@ -33,7 +33,6 @@ export default function NotificationBell() {
         if (!isAuthenticated || !user?.id) return;
 
         try {
-            // Truyền đúng query param ?userId= theo yêu cầu của NotificationsController
             const [countRes, listRes] = await Promise.all([
                 apiFetch<{ count: number }>(`/notifications/me/unread-count?userId=${user.id}`).catch(() => ({ count: 0 })),
                 apiFetch<any>(`/notifications/me?userId=${user.id}`).catch(() => ({ data: [] })),
@@ -41,7 +40,6 @@ export default function NotificationBell() {
 
             setUnreadCount(countRes?.count ?? 0);
 
-            // Xử lý đúng cấu trúc phân trang { data: [...], meta: {...} } của Backend
             const items = Array.isArray(listRes)
                 ? listRes
                 : Array.isArray(listRes?.data)
@@ -56,11 +54,11 @@ export default function NotificationBell() {
 
     useEffect(() => {
         loadData();
-        const interval = setInterval(loadData, 10000); // Tự động làm mới mỗi 10 giây
+        const interval = setInterval(loadData, 10000);
         return () => clearInterval(interval);
     }, [loadData]);
 
-    // Đóng dropdown khi click ra ngoài
+    // Đóng dropdown khi click ra ngoài (chỉ áp dụng cho màn hình desktop)
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -70,6 +68,16 @@ export default function NotificationBell() {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    // Khóa cuộn trang nền khi mở thông báo trên màn hình điện thoại (PWA UX)
+    useEffect(() => {
+        if (open) {
+            document.body.classList.add("overflow-hidden", "sm:overflow-auto");
+        } else {
+            document.body.classList.remove("overflow-hidden", "sm:overflow-auto");
+        }
+        return () => document.body.classList.remove("overflow-hidden", "sm:overflow-auto");
+    }, [open]);
 
     const markAsRead = async (id: number) => {
         if (!user?.id) return;
@@ -97,14 +105,11 @@ export default function NotificationBell() {
         }
     };
 
-    // Xử lý khi click vào 1 dòng thông báo
     const handleItemClick = (item: NotificationItem) => {
-        // 1. Đánh dấu đã đọc nếu chưa đọc
         if (!item.isRead) {
             markAsRead(item.id);
         }
 
-        // 2. Bóc tách orderId từ property hoặc từ chuỗi "#50" trong title/message
         const orderId =
             item.orderId ??
             item.data?.orderId ??
@@ -117,7 +122,6 @@ export default function NotificationBell() {
 
         const targetAnchor = `order-${orderId}`;
 
-        // 3. Nếu đang ở sẵn trang lịch sử đơn -> cuộn mượt và nhấp nháy viền
         if (pathname === "/shop/orders") {
             const el = document.getElementById(targetAnchor);
             if (el) {
@@ -130,7 +134,6 @@ export default function NotificationBell() {
                 window.location.hash = targetAnchor;
             }
         } else {
-            // 4. Nếu đang ở trang khác -> điều hướng về trang orders kèm hash
             router.push(`/shop/orders#${targetAnchor}`);
         }
     };
@@ -139,75 +142,116 @@ export default function NotificationBell() {
 
     return (
         <div className="relative" ref={dropdownRef}>
+            {/* Nút Chuông thông báo */}
             <Button
                 variant="ghost"
                 size="icon"
-                className="relative rounded-xl text-[#2B2118] hover:bg-[#FAF7F2] hover:text-[#2B2118] transition-colors"
+                className="relative rounded-xl text-[#2B2118] hover:bg-[#FAF7F2] hover:text-[#2B2118] transition-colors w-9 h-9 sm:w-10 sm:h-10"
                 aria-label="Thông báo đơn hàng"
                 onClick={() => setOpen(!open)}
             >
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-[#A12B1F] text-white text-[11px] font-bold h-5 min-w-[20px] px-1 rounded-full flex items-center justify-center ring-2 ring-[#FFFFFF] animate-pulse">
+                    <span className="absolute -top-0.5 -right-0.5 bg-[#A12B1F] text-white text-[10px] sm:text-[11px] font-bold h-4.5 min-w-[18px] px-1 rounded-full flex items-center justify-center ring-2 ring-[#FFFFFF] animate-pulse">
                         {unreadCount > 99 ? "99+" : unreadCount}
                     </span>
                 )}
             </Button>
 
+            {/* GIAO DIỆN THÔNG BÁO:
+                - Mobile: Bottom Sheet trượt từ đáy màn hình lên, full-width (360px–410px), có Backdrop làm mờ, không bao giờ bị cắt xén cạnh trái/phải.
+                - Desktop (sm trở lên): Dropdown menu neo góc phải như cũ.
+            */}
             {open && (
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-[#FFFFFF] border border-[#E8E2D9] rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-                    <div className="flex items-center justify-between p-3.5 border-b border-[#E8E2D9] bg-[#FAF7F2]">
-                        <span className="font-semibold text-sm text-[#2B2118]">Thông báo của bạn</span>
-                        {unreadCount > 0 && (
-                            <button
-                                onClick={markAllRead}
-                                disabled={loading}
-                                className="text-xs text-[#B45F2B] hover:text-[#9A4F22] hover:underline flex items-center gap-1 font-semibold disabled:opacity-50 transition-colors"
-                            >
-                                {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCheck className="w-3.5 h-3.5" />}
-                                Đọc tất cả
-                            </button>
-                        )}
-                    </div>
+                <>
+                    {/* Backdrop mờ nền khi mở trên mobile */}
+                    <div
+                        className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs sm:hidden animate-in fade-in duration-200"
+                        onClick={() => setOpen(false)}
+                    />
 
-                    <div className="max-h-80 overflow-y-auto divide-y divide-[#E8E2D9]">
-                        {notifications.length === 0 ? (
-                            <div className="p-8 text-center text-xs text-[#6B5E52]">
-                                Bạn chưa có thông báo nào
-                            </div>
-                        ) : (
-                            notifications.map((item) => (
-                                <div
-                                    key={item.id}
-                                    onClick={() => handleItemClick(item)}
-                                    className={`p-3.5 transition-colors cursor-pointer text-left ${
-                                        item.isRead ? "bg-[#FFFFFF] opacity-75" : "bg-[#FDF1E7]/50 hover:bg-[#FDF1E7]"
-                                    }`}
-                                >
-                                    <div className="flex justify-between items-start gap-2">
-                                        <p className={`text-xs ${item.isRead ? "font-medium text-[#2B2118]" : "font-bold text-[#2B2118]"}`}>
-                                            {item.title}
-                                        </p>
-                                        {!item.isRead && (
-                                            <span className="w-2 h-2 rounded-full bg-[#B45F2B] shrink-0 mt-1" />
-                                        )}
-                                    </div>
-                                    <p className="text-xs text-[#6B5E52] mt-1 leading-relaxed">
-                                        {item.message}
-                                    </p>
-                                    <span className="text-[10px] text-[#6B5E52]/80 mt-1.5 block">
-                                        {new Date(item.createdAt).toLocaleTimeString("vi-VN", {
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                            day: "2-digit",
-                                            month: "2-digit",
-                                        })}
+                    <div className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] rounded-t-2xl sm:rounded-2xl sm:absolute sm:inset-x-auto sm:right-0 sm:bottom-auto sm:top-full sm:mt-2 sm:w-96 bg-[#FFFFFF] border border-[#E8E2D9] shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
+                        {/* Thanh quai kéo (drag handle) chỉ hiển thị trên mobile */}
+                        <div className="w-12 h-1.5 bg-[#E8E2D9] rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
+
+                        {/* Tiêu đề & Nút thao tác */}
+                        <div className="flex items-center justify-between p-3.5 sm:p-4 border-b border-[#E8E2D9] bg-[#FAF7F2] shrink-0">
+                            <div className="flex items-center gap-2">
+                                <BellRing className="w-4 h-4 text-[#B45F2B]" />
+                                <span className="font-bold text-sm text-[#2B2118]">Thông báo của bạn</span>
+                                {unreadCount > 0 && (
+                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#B45F2B]/10 text-[#B45F2B]">
+                                        {unreadCount} mới
                                     </span>
+                                )}
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                {unreadCount > 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={markAllRead}
+                                        disabled={loading}
+                                        className="text-xs text-[#B45F2B] hover:text-[#9A4F22] hover:underline flex items-center gap-1 font-semibold disabled:opacity-50 transition-colors py-1 px-2 rounded-lg"
+                                    >
+                                        {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCheck className="w-3.5 h-3.5" />}
+                                        <span className="hidden xs:inline">Đọc tất cả</span>
+                                        <span className="xs:hidden">Đã đọc hết</span>
+                                    </button>
+                                )}
+                                {/* Nút X đóng popup trên Mobile */}
+                                <button
+                                    type="button"
+                                    onClick={() => setOpen(false)}
+                                    className="p-1 rounded-lg text-[#6B5E52] hover:bg-[#E8E2D9]/40 sm:hidden"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Danh sách thông báo */}
+                        <div className="overflow-y-auto divide-y divide-[#E8E2D9] max-h-[60vh] sm:max-h-80 overscroll-contain">
+                            {notifications.length === 0 ? (
+                                <div className="py-12 px-4 text-center text-xs text-[#6B5E52] space-y-1">
+                                    <Bell className="w-8 h-8 mx-auto text-[#6B5E52]/30 mb-2" />
+                                    <p className="font-semibold text-[#2B2118]">Bạn chưa có thông báo nào</p>
+                                    <p className="text-[11px]">Các cập nhật về đơn hàng sẽ hiển thị ở đây</p>
                                 </div>
-                            ))
-                        )}
+                            ) : (
+                                notifications.map((item) => (
+                                    <div
+                                        key={item.id}
+                                        onClick={() => handleItemClick(item)}
+                                        className={`p-3.5 transition-colors cursor-pointer text-left active:bg-[#FDF1E7] ${
+                                            item.isRead ? "bg-[#FFFFFF] opacity-80" : "bg-[#FDF1E7]/40 hover:bg-[#FDF1E7]"
+                                        }`}
+                                    >
+                                        <div className="flex justify-between items-start gap-2">
+                                            <p className={`text-xs ${item.isRead ? "font-medium text-[#2B2118]" : "font-bold text-[#2B2118]"}`}>
+                                                {item.title}
+                                            </p>
+                                            {!item.isRead && (
+                                                <span className="w-2 h-2 rounded-full bg-[#B45F2B] shrink-0 mt-1 ring-2 ring-[#FDF1E7]" />
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-[#6B5E52] mt-1 leading-relaxed">
+                                            {item.message}
+                                        </p>
+                                        <span className="text-[10px] text-[#6B5E52]/80 mt-1.5 block">
+                                            {new Date(item.createdAt).toLocaleTimeString("vi-VN", {
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                                day: "2-digit",
+                                                month: "2-digit",
+                                            })}
+                                        </span>
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </div>
-                </div>
+                </>
             )}
         </div>
     );
