@@ -25,15 +25,10 @@ async function bootstrap() {
     prefix: '/uploads/',
   });
 
-  // 3. Cấu hình CORS linh hoạt cho cả Localhost và Domain Production
-  const allowedOrigins = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    process.env.FRONTEND_URL,
-  ].filter(Boolean) as string[];
-
+  // 3. Mở CORS động: Tự động cho phép mọi client (localhost, Render frontend, preview domains)
+  // Kết hợp cùng credentials: true mà không sợ lỗi chặn header Access-Control-Allow-Origin
   app.enableCors({
-    origin: allowedOrigins,
+    origin: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
