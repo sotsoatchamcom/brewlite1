@@ -11,19 +11,23 @@ const STEPS = [
 ];
 
 export default function OrderTimeline({ currentStatus }: { currentStatus: string }) {
-    const activeIdx = STEPS.findIndex((s) => s.key === currentStatus);
+    // Chuẩn hóa trạng thái nếu backend trả về BREWING
+    const normalizedStatus = currentStatus === "BREWING" ? "PREPARING" : currentStatus;
+    const activeIdx = STEPS.findIndex((s) => s.key === normalizedStatus);
     const validIdx = activeIdx === -1 ? 0 : activeIdx;
 
     return (
         <div className="w-full py-4">
             <div className="relative flex items-center justify-between">
-                {/* Đường line nền mờ */}
-                <div className="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-1 bg-stone-200 dark:bg-stone-800 z-0" />
+                {/* 1. Đường line nền mờ (Nối từ tâm nút 1 đến tâm nút 5: 36px / 2 = 18px) */}
+                <div className="absolute left-[18px] right-[18px] top-[18px] -translate-y-1/2 h-1 bg-stone-200 dark:bg-stone-800 z-0" />
 
-                {/* Đường line tiến trình phủ màu Amber */}
+                {/* 2. Đường line tiến trình màu Amber (Chạy phủ kín 100% khoảng cách giữa các nút) */}
                 <div
-                    className="absolute left-6 top-1/2 -translate-y-1/2 h-1 bg-amber-600 dark:bg-amber-500 transition-all duration-500 z-0"
-                    style={{ width: `${(validIdx / (STEPS.length - 1)) * 88}%` }}
+                    className="absolute left-[18px] top-[18px] -translate-y-1/2 h-1 bg-amber-600 dark:bg-amber-500 transition-all duration-500 z-0"
+                    style={{
+                        width: `calc((100% - 36px) * (${validIdx} / ${STEPS.length - 1}))`,
+                    }}
                 />
 
                 {STEPS.map((step, idx) => {
