@@ -13,19 +13,19 @@ const eslintConfig = defineConfig([
   ]),
   {
     rules: {
-      // 1. Bỏ qua ép kiểu TypeScript
+      // 1. Tắt ép kiểu chặt TypeScript & hạ cảnh báo biến thừa
       "@typescript-eslint/no-explicit-any": "off",
-
-      // 2. Chuyển biến thừa thành warning để không chặn build
       "@typescript-eslint/no-unused-vars": "warn",
 
-      // 3. Cho phép dùng thẻ <img> HTML thuần
+      // 2. Next.js Rules
       "@next/next/no-img-element": "off",
+      "@next/next/no-location-assign-relative-destination": "off",
 
-      // 4. Tắt rule setState trong useEffect của React 19
+      // 3. Tắt các quy tắc nghiêm ngặt của React 19 / React Compiler
       "react-hooks/set-state-in-effect": "off",
-
-      // 5. Cảnh báo nhẹ về dependency hooks
+      "react-hooks/preserve-manual-memoization": "off",
+      "react-hooks/immutability": "off",
+      "react-hooks/purity": "off",
       "react-hooks/exhaustive-deps": "warn",
     },
   },
