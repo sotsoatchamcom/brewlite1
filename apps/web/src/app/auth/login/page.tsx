@@ -64,7 +64,7 @@ function AuthForm() {
                 if (redirectUrl) {
                     router.replace(redirectUrl);
                 } else if (String(userInfo.role).toUpperCase() === "ADMIN") {
-                    router.replace("/admin");
+                    router.replace("/");
                 } else {
                     router.replace("/shop");
                 }

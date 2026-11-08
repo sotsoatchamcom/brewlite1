@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
@@ -13,19 +14,31 @@ async function bootstrap() {
   // 1. Thêm tiền tố toàn cục /api cho toàn bộ endpoint
   app.setGlobalPrefix('api');
 
+  // 2. Đảm bảo thư mục uploads luôn tồn tại khi chạy cục bộ để không bị crash
+  const uploadDir = join(process.cwd(), 'uploads');
+  if (!existsSync(uploadDir)) {
+    mkdirSync(uploadDir, { recursive: true });
+  }
+
   // Mở quyền truy cập thư mục uploads qua đường dẫn /uploads/...
-  app.useStaticAssets(join(process.cwd(), 'uploads'), {
+  app.useStaticAssets(uploadDir, {
     prefix: '/uploads/',
   });
 
+  // 3. Cấu hình CORS linh hoạt cho cả Localhost và Domain Production
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    process.env.FRONTEND_URL,
+  ].filter(Boolean) as string[];
+
   app.enableCors({
-    origin: ['http://localhost:3000', process.env.FRONTEND_URL].filter(
-        Boolean,
-    ) as string[],
+    origin: allowedOrigins,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
 
+  // 4. Thiết lập Validation Pipe toàn cục
   app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,
@@ -35,7 +48,7 @@ async function bootstrap() {
       }),
   );
 
-  // 2. Chuyển Swagger tài liệu API sang đường dẫn /api/docs để tránh trùng lặp
+  // 5. Cấu hình Swagger API Docs
   const config = new DocumentBuilder()
       .setTitle('BrewLite API')
       .setDescription('API cho hệ thống đặt nước BrewLite')
@@ -49,11 +62,13 @@ async function bootstrap() {
   app.useGlobalInterceptors(new TransformInterceptor());
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  // 3. Lắng nghe trên 0.0.0.0 để container Docker nhận request từ máy ngoài
+  // 6. Lắng nghe cổng và tự động nhận diện Domain hiển thị log
   const port = process.env.PORT || 3001;
   await app.listen(port, '0.0.0.0');
 
-  console.log(`[NestJS] API Server running on: http://localhost:${port}/api`);
-  console.log(`[NestJS] Swagger Docs running on: http://localhost:${port}/api/docs`);
+  const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`;
+
+  console.log(`[NestJS] API Server running on: ${baseUrl}/api`);
+  console.log(`[NestJS] Swagger Docs running on: ${baseUrl}/api/docs`);
 }
 bootstrap();
