@@ -18,14 +18,25 @@ export class ToppingsService {
       throw new ConflictException('Tên topping đã tồn tại!');
     }
 
-    const { categoryIds, ...data } = dto;
+    // Gom categoryId hoặc categoryIds vào danh sách ID duy nhất
+    let catIds: number[] = [];
+    if (dto.categoryId) {
+      catIds.push(Number(dto.categoryId));
+    }
+    if (Array.isArray(dto.categoryIds)) {
+      catIds.push(...dto.categoryIds.map(Number));
+    }
+    catIds = Array.from(new Set(catIds.filter((id) => !isNaN(id) && id > 0)));
+
+    const { categoryId, categoryIds, ...data } = dto;
 
     return this.prisma.topping.create({
       data: {
         ...data,
-        categories: categoryIds && categoryIds.length > 0
-            ? { connect: categoryIds.map((id: number) => ({ id: Number(id) })) }
-            : undefined,
+        categories:
+            catIds.length > 0
+                ? { connect: catIds.map((id) => ({ id })) }
+                : undefined,
       },
       include: {
         categories: {
@@ -35,8 +46,9 @@ export class ToppingsService {
     });
   }
 
+  // Hỗ trợ phân trang, tìm kiếm, lọc theo danh mục và trạng thái ẩn/hiện
   async findAll(query: QueryToppingDto, includeHidden: boolean = false) {
-    const { search, categoryId, page, limit } = query;
+    const { search, categoryId, page = 1, limit = 50 } = query;
     const skip = (page - 1) * limit;
 
     const whereCondition: any = {};
@@ -49,7 +61,6 @@ export class ToppingsService {
       whereCondition.name = { contains: search, mode: 'insensitive' };
     }
 
-    // Nếu truyền categoryId thì chỉ lấy các Topping được gán danh mục này
     if (categoryId) {
       whereCondition.categories = {
         some: { id: Number(categoryId) },
@@ -112,14 +123,26 @@ export class ToppingsService {
       }
     }
 
-    const { categoryIds, ...data } = dto;
+    const hasCategoryUpdate =
+        dto.categoryId !== undefined || dto.categoryIds !== undefined;
+
+    let catIds: number[] = [];
+    if (dto.categoryId) {
+      catIds.push(Number(dto.categoryId));
+    }
+    if (Array.isArray(dto.categoryIds)) {
+      catIds.push(...dto.categoryIds.map(Number));
+    }
+    catIds = Array.from(new Set(catIds.filter((cid) => !isNaN(cid) && cid > 0)));
+
+    const { categoryId, categoryIds, ...data } = dto;
 
     return this.prisma.topping.update({
       where: { id },
       data: {
         ...data,
-        categories: categoryIds !== undefined
-            ? { set: categoryIds.map((cId: number) => ({ id: Number(cId) })) }
+        categories: hasCategoryUpdate
+            ? { set: catIds.map((cid) => ({ id: cid })) }
             : undefined,
       },
       include: {
@@ -136,14 +159,25 @@ export class ToppingsService {
     return this.prisma.topping.update({
       where: { id },
       data: { isAvailable: false },
+      include: {
+        categories: {
+          select: { id: true, name: true },
+        },
+      },
     });
   }
 
   async restore(id: number) {
     await this.findOne(id, true);
+
     return this.prisma.topping.update({
       where: { id },
       data: { isAvailable: true },
+      include: {
+        categories: {
+          select: { id: true, name: true },
+        },
+      },
     });
   }
 }

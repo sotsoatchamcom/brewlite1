@@ -50,9 +50,21 @@ export class CreateToppingDto {
   isAvailable?: boolean;
 
   @ApiPropertyOptional({
+    example: 1,
+    description: 'ID danh mục chọn từ Dropdown (giống Product)',
+  })
+  @Transform(({ value }) =>
+      value !== undefined && value !== '' && value !== null
+          ? Number(value)
+          : undefined,
+  )
+  @IsOptional()
+  categoryId?: number;
+
+  @ApiPropertyOptional({
     type: [Number],
     example: [1, 2],
-    description: 'Danh sách ID các danh mục được chọn topping này',
+    description: 'Danh sách ID các danh mục được gán topping này',
   })
   @Transform(({ value }) => {
     if (typeof value === 'string') {
@@ -60,7 +72,10 @@ export class CreateToppingDto {
         const parsed = JSON.parse(value);
         return Array.isArray(parsed) ? parsed.map(Number) : [Number(value)];
       } catch {
-        return value.split(',').map((v) => Number(v.trim())).filter((n) => !isNaN(n));
+        return value
+            .split(',')
+            .map((v) => Number(v.trim()))
+            .filter((n) => !isNaN(n));
       }
     }
     if (Array.isArray(value)) {
