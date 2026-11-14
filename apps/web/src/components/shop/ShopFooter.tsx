@@ -25,82 +25,66 @@ const SOCIALS: { label: string; href: string; icon: ReactNode }[] = [
 
 export default function ShopFooter() {
     return (
-        <footer className="bg-foreground text-white rounded-t-[2.5rem] overflow-hidden mt-16">
-            <div className="max-w-6xl mx-auto px-6 pt-14 pb-12">
-                <div className="grid gap-10 md:grid-cols-3 md:gap-12 items-start">
-                    
-                    <div className="space-y-4">
-                        <div className="inline-flex items-center gap-2.5">
-                            <span className="w-9 h-9 rounded-xl bg-white text-foreground flex items-center justify-center shadow-md">
-                                <Coffee className="w-5 h-5" />
+        <footer className="mt-10 border-t border-[#E8E2D9] bg-white">
+            <div className="max-w-6xl mx-auto px-6 py-8">
+                <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+                    {/* Thương hiệu */}
+                    <div className="max-w-xs space-y-2">
+                        <div className="inline-flex items-center gap-2">
+                            <span className="w-8 h-8 rounded-full bg-[#B45F2B] flex items-center justify-center">
+                                <Coffee className="w-4 h-4 text-white" />
                             </span>
-                            <span className="text-xl font-bold tracking-tight">BrewLite</span>
+                            <span className="text-lg font-black tracking-tight text-[#2B2118]">
+                                Brew<span className="text-[#B45F2B]">Lite</span>
+                            </span>
                         </div>
-                        <p className="text-sm text-white/60 leading-relaxed max-w-xs">
-                            Thưởng thức hương vị trà và cà phê tuyệt hảo mỗi ngày với trải nghiệm đặt món nhanh chóng, tiện lợi.
+                        <p className="text-xs text-[#6B5E52] leading-relaxed">
+                            Đặt trà và cà phê nhanh gọn, thanh toán không cần tiền mặt.
                         </p>
                     </div>
 
-                    <div className="space-y-3">
-                        <p className="text-xs font-bold uppercase tracking-wider text-white/40">Liên hệ</p>
-                        <address className="not-italic space-y-3 text-sm font-medium text-white/80">
-                            <p className="flex items-start gap-2.5">
-                                <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-white/50" />
-                                <span className="leading-tight">{CONTACT.address}</span>
-                            </p>
-                            <p className="flex items-center gap-2.5">
-                                <Phone className="w-4 h-4 shrink-0 text-white/50" />
-                                <span>{CONTACT.phone}</span>
-                            </p>
-                            <p className="flex items-center gap-2.5">
-                                <Mail className="w-4 h-4 shrink-0 text-white/50" />
-                                <span>{CONTACT.email}</span>
-                            </p>
-                        </address>
+                    {/* Liên hệ + giờ mở cửa */}
+                    <address className="not-italic grid grid-cols-1 gap-2.5 text-sm text-[#2B2118] sm:grid-cols-2 sm:gap-x-8">
+                        <p className="flex items-start gap-2">
+                            <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-[#B45F2B]" />
+                            <span className="leading-snug">{CONTACT.address}</span>
+                        </p>
+                        <p className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 shrink-0 text-[#B45F2B]" />
+                            <span>{CONTACT.hours}</span>
+                        </p>
+                        <p className="flex items-center gap-2">
+                            <Phone className="w-4 h-4 shrink-0 text-[#B45F2B]" />
+                            <a href={`tel:${CONTACT.phone.replace(/\s/g, "")}`}>{CONTACT.phone}</a>
+                        </p>
+                        <p className="flex items-center gap-2">
+                            <Mail className="w-4 h-4 shrink-0 text-[#B45F2B]" />
+                            <a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>
+                        </p>
+                    </address>
+
+                    {/* Mạng xã hội */}
+                    <div className="flex items-center gap-2">
+                        {SOCIALS.map((s) => (
+                            <a
+                                key={s.label}
+                                href={s.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label={s.label}
+                                className="w-10 h-10 rounded-full border border-[#E8E2D9] flex items-center justify-center text-[#2B2118] hover:bg-[#B45F2B] hover:border-[#B45F2B] hover:text-white transition-colors"
+                            >
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                    {s.icon}
+                                </svg>
+                            </a>
+                        ))}
                     </div>
-
-                    <div className="space-y-4">
-                        <div>
-                            <p className="text-xs font-bold uppercase tracking-wider text-white/40 mb-3">Giờ hoạt động</p>
-                            <p className="flex items-center gap-2.5 text-sm font-medium text-white/80">
-                                <Clock className="w-4 h-4 shrink-0 text-white/50" />
-                                <span>{CONTACT.hours}</span>
-                            </p>
-                        </div>
-
-                        <div>
-                            <p className="text-xs font-bold uppercase tracking-wider text-white/40 mb-3">Theo dõi chúng tôi</p>
-                            <div className="flex items-center gap-3">
-                                {SOCIALS.map((s) => (
-                                    <a 
-                                        key={s.label} 
-                                        href={s.href} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer" 
-                                        aria-label={s.label} 
-                                        className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-white/80 hover:bg-white/20 hover:text-white transition-all"
-                                    >
-                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                            {s.icon}
-                                        </svg>
-                                    </a>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
-            </div>
 
-            <div className="border-t border-white/10 bg-black/40">
-                <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-                    <p className="text-xs text-white/50 text-center sm:text-left">
-                        © {new Date().getFullYear()} BrewLite — Đồ án môn Công nghệ Phần mềm, Đại học Sài Gòn (SGU)
-                    </p>
-                    <p className="text-xs text-white/40">
-                        Designed with Next.js &amp; Tailwind CSS
-                    </p>
-                </div>
+                <p className="mt-6 border-t border-[#E8E2D9] pt-4 text-center text-[11px] text-[#6B5E52] md:text-left">
+                    © {new Date().getFullYear()} BrewLite — Đồ án môn Công nghệ Phần mềm, Đại học Sài Gòn (SGU)
+                </p>
             </div>
         </footer>
     );

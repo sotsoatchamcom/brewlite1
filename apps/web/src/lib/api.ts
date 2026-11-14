@@ -14,7 +14,9 @@ export function getImageUrl(url?: string | null): string | undefined {
     ) {
         return url;
     }
-    return `${BASE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
+    // Ảnh được serve ở /uploads (không nằm dưới tiền tố /api) nên phải cắt /api khỏi BASE_URL
+    const host = BASE_URL.replace(/\/api\/?$/, "");
+    return `${host}${url.startsWith("/") ? "" : "/"}${url}`;
 }
 
 export async function apiFetch<T>(

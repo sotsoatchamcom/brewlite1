@@ -34,37 +34,32 @@ function QuantitySelector({
     size?: "sm" | "lg";
 }) {
     const atMax = max !== null && qty >= max;
-    const btn = size === "lg" ? "h-10 w-10" : "h-9 w-9";
-    const box = size === "lg" ? "p-1" : "";
-    const label = size === "lg" ? "text-base w-10" : "text-sm w-7";
+    const btn = size === "lg" ? "h-11 w-11" : "h-10 w-10";
+    const cls = `${btn} inline-flex items-center justify-center rounded-full text-[#2B2118] transition-colors hover:bg-[#FAF7F2] active:scale-95 disabled:opacity-40 disabled:hover:bg-transparent`;
 
     return (
-        <div className={`flex items-center border border-border rounded-2xl bg-card ${box}`}>
-            <Button
+        <div className="flex shrink-0 items-center rounded-full border border-[#E8E2D9] bg-white p-0.5">
+            <button
                 type="button"
-                variant="ghost"
-                size="icon"
-                className={`rounded-xl ${btn}`}
+                className={cls}
                 aria-label="Giảm số lượng"
                 disabled={qty <= 1}
                 onClick={() => setQty((q) => Math.max(1, q - 1))}
             >
                 <Minus className="w-4 h-4" />
-            </Button>
-            <span className={`text-center font-bold ${label}`} aria-live="polite">
+            </button>
+            <span className="w-8 text-center text-sm font-bold text-[#2B2118]" aria-live="polite">
                 {qty}
             </span>
-            <Button
+            <button
                 type="button"
-                variant="ghost"
-                size="icon"
-                className={`rounded-xl ${btn}`}
+                className={cls}
                 aria-label="Tăng số lượng"
                 disabled={atMax}
                 onClick={() => setQty((q) => q + 1)}
             >
                 <Plus className="w-4 h-4" />
-            </Button>
+            </button>
         </div>
     );
 }
@@ -231,57 +226,65 @@ export default function ProductDetailPage() {
         }
     };
 
-    const back = (
-        <Button
-            asChild
-            variant="ghost"
-            className="rounded-xl gap-2 -ml-3 text-muted-foreground hover:text-foreground transition-colors"
+    const backLink = (
+        <Link
+            href="/shop"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#6B5E52] transition-colors hover:text-[#2B2118]"
         >
-            <Link href="/shop">
-                <ArrowLeft className="w-4 h-4" /> Quay lại menu
-            </Link>
-        </Button>
+            <ArrowLeft className="w-4 h-4" /> Quay lại menu
+        </Link>
     );
 
+    // Bọc ngoài: mobile tràn mép (bù padding của layout), desktop căn giữa
+    const shell = "-mx-6 -mt-8 max-w-5xl md:mx-auto md:mt-0";
+
+    /* ---------- LOADING ---------- */
     if (status === "loading") {
         return (
-            <div className="container max-w-5xl py-6 mx-auto px-4">
-                {back}
-                <div className="mt-6 grid gap-10 md:grid-cols-2" aria-busy="true">
-                    <Skeleton className="aspect-square rounded-3xl w-full" />
-                    <div className="space-y-4">
-                        <Skeleton className="h-8 w-3/4 rounded-xl" />
-                        <Skeleton className="h-6 w-1/4 rounded-xl" />
-                        <Skeleton className="h-24 w-full rounded-xl" />
-                        <Skeleton className="h-40 w-full rounded-xl" />
+            <div className={shell} aria-busy="true" aria-label="Đang tải món">
+                <div className="hidden md:block mb-5">{backLink}</div>
+                <div className="md:grid md:grid-cols-12 md:gap-12">
+                    <Skeleton className="aspect-[4/3] w-full rounded-none bg-[#E8E2D9]/60 md:col-span-5 md:aspect-square md:rounded-3xl" />
+                    <div className="space-y-4 px-6 pt-6 md:col-span-7 md:px-0 md:pt-0">
+                        <Skeleton className="h-5 w-24 rounded-full bg-[#E8E2D9]/60" />
+                        <Skeleton className="h-8 w-3/4 rounded-xl bg-[#E8E2D9]/60" />
+                        <Skeleton className="h-7 w-1/3 rounded-xl bg-[#E8E2D9]/60" />
+                        <Skeleton className="h-16 w-full rounded-xl bg-[#E8E2D9]/60" />
+                        <Skeleton className="h-40 w-full rounded-2xl bg-[#E8E2D9]/60" />
                     </div>
                 </div>
             </div>
         );
     }
 
+    /* ---------- ERROR / KHÔNG TÌM THẤY ---------- */
     if (status === "error" || !product) {
         return (
-            <div className="container max-w-md py-16 mx-auto px-4 text-center">
-                {back}
-                <div className="mt-8 bg-card border border-border/80 rounded-3xl p-8 shadow-sm">
-                    <div className="w-12 h-12 bg-destructive/10 text-destructive rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="mx-auto max-w-md py-6 text-center">
+                <div className="mb-4 text-left">{backLink}</div>
+                <div role="alert" className="rounded-2xl border border-[#E8E2D9] bg-white p-8">
+                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#A12B1F]/10 text-[#A12B1F]">
                         <Coffee className="w-6 h-6" />
                     </div>
-                    <h2 className="text-lg font-bold">Không tìm thấy món này</h2>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <h2 className="text-lg font-bold text-[#2B2118]">
+                        {error ? "Không tải được món này" : "Không tìm thấy món này"}
+                    </h2>
+                    <p className="mt-1 text-sm text-[#6B5E52]">
                         {error || "Món có thể đã bị ẩn hoặc không còn trong menu."}
                     </p>
                     <div className="mt-6 grid gap-2">
                         <Button
                             onClick={() => setReloadKey((k) => k + 1)}
-                            variant="outline"
-                            className="rounded-xl w-full"
+                            className="h-11 w-full gap-2 rounded-full bg-[#B45F2B] font-semibold text-white hover:bg-[#9A4F22]"
                         >
-                            <RefreshCw className="w-4 h-4 mr-2" /> Thử lại
+                            <RefreshCw className="w-4 h-4" /> Thử lại
                         </Button>
-                        <Button asChild className="rounded-xl w-full shadow-sm">
-                            <Link href="/shop">Khám phá thực đơn</Link>
+                        <Button
+                            asChild
+                            variant="outline"
+                            className="h-11 w-full rounded-full border-[#E8E2D9] font-semibold text-[#2B2118] hover:bg-[#FAF7F2]"
+                        >
+                            <Link href="/shop">Về thực đơn</Link>
                         </Button>
                     </div>
                 </div>
@@ -289,76 +292,88 @@ export default function ProductDetailPage() {
         );
     }
 
+    /* ---------- READY ---------- */
+    const addLabel = soldOut ? "Hết hàng" : `Thêm vào giỏ · ${formatVND(totalPrice)}`;
+    const addBtnCls =
+        "flex-1 rounded-full bg-[#B45F2B] font-bold text-white transition-all hover:bg-[#9A4F22] active:scale-[0.98] disabled:bg-[#E8E2D9] disabled:text-[#6B5E52]";
+
     return (
-        <div className="container max-w-5xl py-6 mx-auto px-4 pb-28 md:pb-12">
-            {back}
+        <div className={`${shell} pb-28 md:pb-10`}>
+            <div className="hidden md:block mb-5">{backLink}</div>
 
-            <div className="mt-6 grid gap-8 md:gap-12 md:grid-cols-12 items-start">
-
-                {/* HÌNH ẢNH */}
-                <div className="md:col-span-5 lg:col-span-5 md:sticky md:top-24">
-                    <div className="relative aspect-square overflow-hidden rounded-3xl border border-border/80 bg-zinc-100 dark:bg-zinc-800/50 shadow-sm flex items-center justify-center group">
+            <div className="md:grid md:grid-cols-12 md:items-start md:gap-12">
+                {/* ẢNH: tràn mép trên mobile, vuông bo góc trên desktop */}
+                <div className="relative md:sticky md:top-24 md:col-span-5">
+                    <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-[#FAF7F2] md:aspect-square md:rounded-3xl md:border md:border-[#E8E2D9]">
                         {img ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
                                 src={img}
                                 alt={product.name}
                                 onError={() => setImgError(true)}
-                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                className={`h-full w-full object-cover ${soldOut ? "grayscale" : ""}`}
                             />
                         ) : (
-                            <Coffee className="w-20 h-20 text-muted-foreground/40" />
+                            <Coffee className="w-20 h-20 text-[#6B5E52]/40" />
                         )}
                         {soldOut && (
-                            <div className="absolute inset-0 bg-background/60 backdrop-blur-xs flex items-center justify-center">
-                                <span className="px-4 py-2 rounded-full text-sm font-bold bg-foreground text-background shadow-md">
+                            <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-xs">
+                                <span className="rounded-full bg-[#2B2118] px-4 py-2 text-sm font-bold text-white shadow-md">
                                     Tạm hết hàng
                                 </span>
                             </div>
                         )}
                     </div>
+                    {/* Nút quay lại nổi trên ảnh (mobile) */}
+                    <Link
+                        href="/shop"
+                        aria-label="Quay lại menu"
+                        className="absolute left-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-[#2B2118] shadow-md backdrop-blur md:hidden"
+                    >
+                        <ArrowLeft className="w-5 h-5" />
+                    </Link>
                 </div>
 
-                {/* THÔNG TIN */}
-                <div className="md:col-span-7 lg:col-span-7 space-y-6">
+                {/* THÔNG TIN: thẻ trắng bo góc đè lên ảnh trên mobile */}
+                <div className="relative z-10 -mt-6 space-y-5 rounded-t-3xl bg-white px-6 pb-4 pt-6 md:col-span-7 md:mt-0 md:rounded-none md:bg-transparent md:p-0">
                     <div>
                         {product.category?.name && (
-                            <span className="inline-block text-xs font-semibold uppercase tracking-wider text-primary bg-primary/10 px-3 py-1 rounded-full mb-3">
+                            <span className="mb-2 inline-block rounded-full bg-[#B45F2B]/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[#B45F2B]">
                                 {product.category.name}
                             </span>
                         )}
-                        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
+                        <h1 className="text-2xl font-extrabold leading-tight tracking-tight text-[#2B2118] md:text-4xl">
                             {product.name}
                         </h1>
 
-                        <div className="flex items-baseline gap-3 mt-4" aria-live="polite">
-                            <span className="text-3xl sm:text-4xl font-black text-primary drop-shadow-sm">
+                        <div className="mt-2 flex items-baseline gap-3" aria-live="polite">
+                            <span className="text-2xl font-black text-[#B45F2B] md:text-3xl">
                                 {formatVND(unitPrice)}
                             </span>
                             {hasExtra && (
-                                <span className="text-sm font-medium text-muted-foreground line-through">
-                                    Gốc: {formatVND(basePrice)}
+                                <span className="text-sm text-[#6B5E52] line-through">
+                                    {formatVND(basePrice)}
                                 </span>
                             )}
                         </div>
 
                         {lowStock && (
-                            <p className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 px-2.5 py-1 rounded-full">
+                            <p className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
                                 <AlertCircle className="w-3.5 h-3.5" />
                                 Chỉ còn {stock} phần
                             </p>
                         )}
 
                         {product.description && (
-                            <p className="text-sm text-muted-foreground mt-4 leading-relaxed bg-accent/30 p-4 rounded-2xl border border-border/50">
+                            <p className="mt-3 text-sm leading-relaxed text-[#6B5E52]">
                                 {product.description}
                             </p>
                         )}
                     </div>
 
-                    {/* VÙNG TÙY CHỌN SIZE & TOPPING ĐÃ ĐƯỢC LỌC */}
-                    <div className="border-t border-border/60 pt-5">
-                        <div className="max-h-[45vh] overflow-y-auto pr-3 custom-scrollbar">
+                    {/* Size & topping (đã lọc theo danh mục) */}
+                    <div className="rounded-2xl border border-[#E8E2D9] bg-white p-4">
+                        <div className="custom-scrollbar md:max-h-[45vh] md:overflow-y-auto md:pr-2">
                             <OptionFields
                                 sizes={sizes}
                                 sizeId={sizeId}
@@ -370,41 +385,36 @@ export default function ProductDetailPage() {
                         </div>
                     </div>
 
-                    {/* Bảng tóm tắt giá */}
+                    {/* Tóm tắt giá */}
                     {(hasExtra || chosen.length > 0) && (
-                        <div className="bg-accent/30 border border-border/50 rounded-2xl p-4 text-sm space-y-1.5">
-                            <div className="flex justify-between text-muted-foreground">
+                        <div className="space-y-1.5 rounded-2xl border border-[#E8E2D9] bg-[#FAF7F2] p-4 text-sm">
+                            <div className="flex justify-between text-[#6B5E52]">
                                 <span>Giá cơ bản</span>
                                 <span>{formatVND(basePrice)}</span>
                             </div>
                             {sizeSurcharge > 0 && (
-                                <div className="flex justify-between text-muted-foreground">
+                                <div className="flex justify-between text-[#6B5E52]">
                                     <span>Size {size?.name}</span>
                                     <span>+{formatVND(sizeSurcharge)}</span>
                                 </div>
                             )}
                             {toppingsPrice > 0 && (
-                                <div className="flex justify-between text-muted-foreground">
+                                <div className="flex justify-between text-[#6B5E52]">
                                     <span>Topping ({chosen.length})</span>
                                     <span>+{formatVND(toppingsPrice)}</span>
                                 </div>
                             )}
-                            <div className="flex justify-between font-bold text-foreground pt-2 border-t border-border/50">
-                                <span>Tạm tính</span>
+                            <div className="flex justify-between border-t border-[#E8E2D9] pt-2 font-bold text-[#2B2118]">
+                                <span>Tạm tính / ly</span>
                                 <span>{formatVND(unitPrice)}</span>
                             </div>
                         </div>
                     )}
 
-                    {/* Nút Desktop / Tablet */}
-                    <div className="border-t border-border/60 pt-6 hidden md:flex items-center gap-4 sticky bottom-0 bg-background/95 backdrop-blur-md pb-4 z-10">
+                    {/* Nút thêm vào giỏ (desktop) */}
+                    <div className="hidden items-center gap-3 pt-1 md:flex">
                         <QuantitySelector qty={qty} setQty={setQty} max={maxQty} size="lg" />
-                        <Button
-                            onClick={submit}
-                            disabled={soldOut || adding}
-                            size="lg"
-                            className="rounded-2xl flex-1 h-12 text-base font-bold shadow-md transition-all hover:scale-[1.01] active:scale-[0.99]"
-                        >
+                        <Button onClick={submit} disabled={soldOut || adding} className={`h-12 text-base ${addBtnCls}`}>
                             {added ? (
                                 <>
                                     <Check className="w-5 h-5 mr-2" /> Đã thêm
@@ -412,7 +422,7 @@ export default function ProductDetailPage() {
                             ) : (
                                 <>
                                     <ShoppingBag className="w-5 h-5 mr-2" />
-                                    {soldOut ? "Hết hàng" : `Thêm vào giỏ · ${formatVND(totalPrice)}`}
+                                    {addLabel}
                                 </>
                             )}
                         </Button>
@@ -420,46 +430,48 @@ export default function ProductDetailPage() {
                 </div>
             </div>
 
-            {/* GỢI Ý MÓN KHÁC */}
+            {/* GỢI Ý: cuộn ngang trên mobile, lưới 4 cột trên desktop */}
             {suggestedProducts.length > 0 && (
-                <div className="mt-16 pt-8 border-t border-border/60">
-                    <h3 className="text-xl font-bold mb-4">Bạn có thể thích</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <section className="mt-6 px-6 md:mt-14 md:border-t md:border-[#E8E2D9] md:px-0 md:pt-8">
+                    <h2 className="mb-3 text-lg font-bold text-[#2B2118] md:text-xl">Bạn có thể thích</h2>
+                    <div className="flex snap-x gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-4 md:gap-4 md:overflow-visible">
                         {suggestedProducts.map((p) => (
-                            <Link href={`/shop/products/${p.id}`} key={p.id} className="group">
-                                <div className="bg-card border border-border/80 rounded-2xl p-3 hover:shadow-md transition-shadow h-full flex flex-col">
-                                    <div className="relative aspect-square bg-zinc-100 dark:bg-zinc-800/50 rounded-xl mb-3 flex items-center justify-center overflow-hidden">
-                                        {p.imageUrl ? (
-                                            // eslint-disable-next-line @next/next/no-img-element
-                                            <img
-                                                src={getImageUrl(p.imageUrl)}
-                                                alt={p.name}
-                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                            />
-                                        ) : (
-                                            <Coffee className="w-8 h-8 text-muted-foreground/30" />
-                                        )}
-                                    </div>
-                                    <p className="font-semibold text-sm truncate text-foreground">{p.name}</p>
-                                    <p className="text-primary font-bold text-sm mt-auto pt-2">{formatVND(p.price)}</p>
+                            <Link
+                                href={`/shop/products/${p.id}`}
+                                key={p.id}
+                                className="group w-40 shrink-0 snap-start overflow-hidden rounded-2xl border border-[#E8E2D9] bg-white transition-shadow hover:shadow-md md:w-auto"
+                            >
+                                <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-[#FAF7F2]">
+                                    {p.imageUrl ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img
+                                            src={getImageUrl(p.imageUrl)}
+                                            alt={p.name}
+                                            loading="lazy"
+                                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                        />
+                                    ) : (
+                                        <Coffee className="w-8 h-8 text-[#6B5E52]/30" />
+                                    )}
+                                </div>
+                                <div className="p-3">
+                                    <p className="truncate text-sm font-semibold text-[#2B2118]">{p.name}</p>
+                                    <p className="mt-1 text-sm font-bold text-[#B45F2B]">{formatVND(p.price)}</p>
                                 </div>
                             </Link>
                         ))}
                     </div>
-                </div>
+                </section>
             )}
 
+            {/* Thanh thêm vào giỏ cố định (mobile) */}
             <div
                 role="region"
                 aria-label="Thêm vào giỏ"
-                className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-lg z-50 flex items-center gap-3"
+                className="fixed inset-x-0 bottom-0 z-50 flex items-center gap-3 border-t border-[#E8E2D9] bg-white/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-lg backdrop-blur md:hidden"
             >
                 <QuantitySelector qty={qty} setQty={setQty} max={maxQty} size="sm" />
-                <Button
-                    onClick={submit}
-                    disabled={soldOut || adding}
-                    className="rounded-2xl flex-1 h-11 font-bold shadow-md text-sm"
-                >
+                <Button onClick={submit} disabled={soldOut || adding} className={`h-12 text-sm ${addBtnCls}`}>
                     {added ? (
                         <>
                             <Check className="w-4 h-4 mr-2" /> Đã thêm

@@ -3,31 +3,39 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Coffee, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { getImageUrl, DEFAULT_PRODUCT_IMAGE } from "@/components/ui/utils";
 import { formatVND } from "@/lib/shop";
 import type { Product } from "@/lib/types";
 
+/**
+ * Mobile-first: dạng hàng ngang (ảnh trái – thông tin phải) trên điện thoại,
+ * chuyển thành thẻ dọc từ màn hình md trở lên.
+ */
 export default function ProductCard({
-                                        product,
-                                        onSelect
-                                    }: {
+    product,
+    onSelect,
+}: {
     product: Product;
     onSelect: (p: Product) => void;
 }) {
     const [imgError, setImgError] = useState(false);
 
     const soldOut = (product.stock ?? 0) <= 0;
+    const detailHref = `/shop/products/${product.id}`;
     const rawImg = !imgError && product.imageUrl ? getImageUrl(product.imageUrl) : DEFAULT_PRODUCT_IMAGE;
 
     return (
-        <div
-            className={`group relative flex flex-col bg-[#FFFFFF] border border-[#E8E2D9] rounded-xl overflow-hidden shadow-xs transition-all duration-200 hover:shadow-md hover:border-[#B45F2B]/40 ${
-                soldOut ? "opacity-75" : "hover:-translate-y-0.5"
+        <article
+            className={`group relative flex flex-row md:flex-col gap-3 md:gap-0 bg-[#FFFFFF] border border-[#E8E2D9] rounded-2xl p-2.5 md:p-0 md:overflow-hidden transition-shadow duration-200 hover:shadow-md ${
+                soldOut ? "opacity-70" : ""
             }`}
         >
-            {/* 1. KHU VỰC HÌNH ẢNH */}
-            <div className="relative aspect-[4/3] bg-[#FAF7F2] flex items-center justify-center overflow-hidden border-b border-[#E8E2D9]/60">
+            {/* Ảnh */}
+            <Link
+                href={detailHref}
+                aria-label={`Xem chi tiết ${product.name}`}
+                className="relative shrink-0 size-24 md:size-auto md:w-full md:aspect-[4/3] rounded-xl md:rounded-none bg-[#FAF7F2] flex items-center justify-center overflow-hidden"
+            >
                 {rawImg && !imgError ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -35,61 +43,48 @@ export default function ProductCard({
                         alt={product.name}
                         loading="lazy"
                         onError={() => setImgError(true)}
-                        className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${
-                            soldOut ? "grayscale-[60%] blur-[0.5px]" : ""
-                        }`}
+                        className={`w-full h-full object-cover ${soldOut ? "grayscale" : ""}`}
                     />
                 ) : (
-                    <Coffee className="w-10 h-10 text-[#6B5E52]/40 transition-transform duration-300 group-hover:scale-110" />
+                    <Coffee className="w-8 h-8 text-[#6B5E52]/40" />
                 )}
-
-                {/* Badge Hết hàng */}
                 {soldOut && (
-                    <div className="absolute inset-0 bg-[#2B2118]/30 backdrop-blur-[1px] flex items-center justify-center">
-                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#FFFFFF] text-[#A12B1F] border border-[#FBE9E7] shadow-xs uppercase tracking-wider">
-                            Hết hàng
-                        </span>
-                    </div>
+                    <span className="absolute inset-x-0 bottom-0 bg-[#2B2118]/70 py-0.5 text-center text-[10px] font-bold uppercase tracking-wider text-white">
+                        Hết hàng
+                    </span>
                 )}
-            </div>
+            </Link>
 
-            {/* 2. NỘI DUNG MÓN */}
-            <div className="p-3.5 pr-12 flex flex-col flex-1">
-                {product.category?.name && (
-                    <p className="text-[11px] font-semibold text-[#6B5E52] uppercase tracking-wider mb-1">
-                        {product.category.name}
+            {/* Nội dung */}
+            <div className="flex min-w-0 flex-1 flex-col justify-between md:p-3.5">
+                <div>
+                    <h3 className="font-bold text-[#2B2118] text-[15px] leading-snug line-clamp-2">
+                        <Link href={detailHref} className="hover:text-[#B45F2B] transition-colors">
+                            {product.name}
+                        </Link>
+                    </h3>
+                    {product.description && (
+                        <p className="mt-0.5 text-xs text-[#6B5E52] line-clamp-1 md:line-clamp-2">
+                            {product.description}
+                        </p>
+                    )}
+                </div>
+
+                <div className="mt-2 flex items-center justify-between gap-2">
+                    <p className="font-extrabold text-[#B45F2B] text-base tracking-tight">
+                        {formatVND(product.price)}
                     </p>
-                )}
-
-                <h3 className="font-bold text-[#2B2118] text-sm leading-snug line-clamp-2">
                     <button
                         type="button"
-                        onClick={() => !soldOut && onSelect(product)}
-                        className="text-left hover:text-[#B45F2B] transition-colors focus:outline-none"
+                        disabled={soldOut}
+                        onClick={() => onSelect(product)}
+                        aria-label={`Chọn món ${product.name}`}
+                        className="inline-flex h-11 w-11 md:h-9 md:w-9 items-center justify-center rounded-full bg-[#B45F2B] text-white transition active:scale-95 hover:bg-[#9A4F22] disabled:bg-[#E8E2D9] disabled:text-[#6B5E52]/50 disabled:active:scale-100"
                     >
-                        {product.name}
+                        <Plus className="w-5 h-5 stroke-[2.5]" />
                     </button>
-                </h3>
-
-                <p className="font-extrabold text-[#B45F2B] text-base mt-auto pt-2.5 tracking-tight">
-                    {formatVND(product.price)}
-                </p>
+                </div>
             </div>
-
-            {/* 3. NÚT THÊM NHANH (+) */}
-            <Button
-                size="icon"
-                className="absolute bottom-3 right-3 z-10 h-8 w-8 rounded-full shadow-xs bg-[#B45F2B] hover:bg-[#9A4F22] text-white transition-all duration-150 hover:scale-105 active:scale-95 disabled:bg-[#E8E2D9] disabled:text-[#6B5E52]/50 disabled:scale-100"
-                aria-label={`Chọn món ${product.name}`}
-                disabled={soldOut}
-                onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onSelect(product);
-                }}
-            >
-                <Plus className="w-4 h-4 stroke-[2.5]" />
-            </Button>
-        </div>
+        </article>
     );
 }

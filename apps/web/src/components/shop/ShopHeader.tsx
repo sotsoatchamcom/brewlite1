@@ -97,14 +97,28 @@ export default function ShopHeader({ rightSlot }: ShopHeaderProps = {}) {
     return (
         <>
             {/* Header: px-3 trên mobile, px-6 trên desktop */}
-            <header className="h-14 sm:h-16 bg-[#FFFFFF] border-b border-[#E8E2D9] px-3 sm:px-6 flex items-center justify-between sticky top-0 z-40 shadow-xs">
+            <header className="h-14 sm:h-16 bg-[#FAF7F2]/90 backdrop-blur border-b-2 border-[#B45F2B]/70 px-3 sm:px-6 flex items-center justify-between sticky top-0 z-40">
                 {/* Logo thương hiệu */}
                 <Link href="/shop" className="flex items-center gap-2 group shrink-0">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#2B2118] text-[#FAF7F2] flex items-center justify-center shadow-xs transition-transform group-hover:scale-105">
-                        <Coffee className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FAF7F2]" />
+                    <div className="w-8 h-8 rounded-full bg-[#B45F2B] flex items-center justify-center transition-transform group-hover:rotate-12">
+                        <Coffee className="w-4 h-4 text-white" />
                     </div>
-                    <span className="font-bold text-sm sm:text-base tracking-tight text-[#2B2118]">BrewLite</span>
+                    <span className="font-black text-base sm:text-lg tracking-tight text-[#2B2118]">
+                        Brew<span className="text-[#B45F2B]">Lite</span>
+                    </span>
                 </Link>
+
+                {/* Điều hướng nhanh (chỉ desktop) */}
+                <nav className="hidden md:flex items-center gap-1 ml-6 mr-auto" aria-label="Điều hướng chính">
+                    <Link href="/shop" className="px-3 py-1.5 rounded-full text-sm font-semibold text-[#2B2118] hover:bg-[#B45F2B]/10">
+                        Thực đơn
+                    </Link>
+                    {isAuthenticated && (
+                        <Link href="/shop/orders" className="px-3 py-1.5 rounded-full text-sm font-semibold text-[#2B2118] hover:bg-[#B45F2B]/10">
+                            Đơn hàng
+                        </Link>
+                    )}
+                </nav>
 
                 {/* Danh mục nút chức năng bên phải */}
                 <div className="flex items-center gap-1 sm:gap-2">
@@ -119,7 +133,7 @@ export default function ShopHeader({ rightSlot }: ShopHeaderProps = {}) {
                             asChild
                             variant="ghost"
                             size="icon"
-                            className="rounded-xl text-[#2B2118] hover:bg-[#FAF7F2] transition-colors w-9 h-9 sm:w-10 sm:h-10"
+                            className="md:hidden rounded-full text-[#2B2118] hover:bg-[#B45F2B]/10 transition-colors w-9 h-9 sm:w-10 sm:h-10"
                             aria-label="Lịch sử đơn hàng"
                             title="Lịch sử đơn hàng"
                         >
@@ -132,12 +146,11 @@ export default function ShopHeader({ rightSlot }: ShopHeaderProps = {}) {
                     {/* 3. Giỏ hàng */}
                     <Button
                         asChild
-                        variant="outline"
-                        className="rounded-xl gap-1.5 sm:gap-2 border-[#E8E2D9] text-[#2B2118] hover:bg-[#FAF7F2] transition-colors px-2.5 sm:px-3 h-9 sm:h-10"
+                        className="rounded-full gap-1.5 sm:gap-2 bg-[#2B2118] text-white hover:bg-[#2B2118]/90 transition-colors px-3 sm:px-4 h-9 sm:h-10"
                         aria-label={`Giỏ hàng, ${totalQty} ly`}
                     >
                         <Link href="/shop/cart">
-                            <ShoppingBag className="w-4 h-4 text-[#B45F2B]" />
+                            <ShoppingBag className="w-4 h-4 text-white" />
                             <span className="hidden sm:inline font-semibold">Giỏ hàng</span>
                             {hydrated && totalQty > 0 && (
                                 <span className="min-w-4.5 h-4.5 sm:min-w-5 sm:h-5 px-1 rounded-full bg-[#B45F2B] text-white text-[10px] sm:text-xs font-bold flex items-center justify-center">
